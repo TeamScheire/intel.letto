@@ -1,7 +1,26 @@
+// Ingegno 01/2018
+// Buzzer YL-44 with NodeMCU
+
+// This is an active buzzer, it produces sound by itself without
+// external frequency generator. Sound is in the audible 2 kHz range
+// Taking the I/O pin LOW will turn the buzzer ON and taking this
+// pin HIGH will turn the buzzer OFF (as will leaving this pin OPEN). 
+// This device can be controlled by PWM.
+
+// The buzzer is connected to NodeMCU pin D6. This pin has 3V3 login, so the I/O pin
+// of the buzzer would always be LOW with buzzer on as only with 5V buzzer is off
+//
+// Solution: we add a BC547 NPN transistor on the GND pin of the YL-44. This
+//           allows to connect the I/O pin of the YL-44 to the GND out of the
+//           NodeMCU, and the VCC to the 5V pin. The D6 pin is connected to the 
+//           Base of the BC547, the GND of the YL-44 is connected to the Emittor
+//           (right) of the BC547, and the Collector is connected to the GND of 
+//           NodeMCU.
+//           It is possible to achieve softer sounds using PWM on the D6 pin
+
 int knop_waarde;
 int beepstrength;
 int beepDuration;
-int i;
 int beepDurationTotal;
 int dotDuration;
 int Drukknop1 = D7;
@@ -345,8 +364,6 @@ void beepCris() {
   }
 }
 
-
-
 void setup() {
   pinMode(Drukknop1, INPUT_PULLUP);
   pinMode(buzzer, OUTPUT);
@@ -372,7 +389,6 @@ void setup() {
   knop_waarde = 1;
   beepstrength = 255;
   beepDuration = 250;
-  i = 250;
   beepDurationTotal = 250;
   dotDuration = 250;
 
@@ -413,17 +429,5 @@ void loop() {
   } else if (knop_waarde == 6) {
     analogWrite(buzzer, 0);
   }
-
-  // Deze functie beschrijven...
-
-  // Deze functie beschrijven...
-
-  // Deze functie beschrijven...
-
-  // Deze functie beschrijven...
-
-  // Deze functie beschrijven...
-
-  // Deze functie beschrijven...
 
 }
