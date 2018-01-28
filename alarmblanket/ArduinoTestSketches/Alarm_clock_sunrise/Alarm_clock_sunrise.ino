@@ -35,16 +35,16 @@
 
 /*  START USER SETTABLE OPTIONS */
 // alarm
-uint8_t alarm_hour = 10;
-uint8_t alarm_min = 26;
+uint8_t alarm_hour = 8;
+uint8_t alarm_min = 0;
 bool alarm_sunrise_set = true;  // do alarm or not
 uint8_t sunrise_start_min_before = 10;  // minutes to start sunrise before alarm time (max 59)
+bool dageraad1on = false;
 
 // wifi data
 // write here your wifi credentials 
 const char* ssid = "*****";   // insert your own ssid 
 const char* password = "********"; // and password
-
 /*  END USER SETTABLE OPTIONS */
 
 /* WIRING OF THE ALARM */
@@ -470,17 +470,33 @@ void displayDateTime() {
 void sunrise_color() {
   if (alarm_sunrise_on) {
     if (sec_from_alarm > 0) {
-      // you should be awake, full light
-      R = dageraad[255] [0];
-      G = dageraad[255] [1];
-      B = dageraad[255] [2];
-    }  else {
-      fractie = 255 -(-sec_from_alarm *256.0/ (sunrise_start_min_before * 60));
-      /* "leds van een bepaalde kleur" */
-      //Serial.println(fractie);
-      R = dageraad[fractie] [0];
-      G = dageraad[fractie] [1];
-      B = dageraad[fractie] [2];
+      if (dageraad1on) {
+        // you should be awake, full light
+        R = dageraad1[dageraad1len-1] [0];
+        G = dageraad1[dageraad1len-1] [1];
+        B = dageraad1[dageraad1len-1] [2];
+      } else {
+        // you should be awake, full light
+        R = dageraad2[dageraad2len-1] [0];
+        G = dageraad2[dageraad2len-1] [1];
+        B = dageraad2[dageraad2len-1] [2];
+      }
+    } else {
+      if (dageraad1on) {
+        fractie = (dageraad1len-1) -(-sec_from_alarm *dageraad1len*1.0/ (sunrise_start_min_before * 60));
+        /* "leds van een bepaalde kleur" */
+        //Serial.println(fractie);
+        R = dageraad1[fractie] [0];
+        G = dageraad1[fractie] [1];
+        B = dageraad1[fractie] [2];
+      } else {
+        fractie = (dageraad2len-1) -(-sec_from_alarm *dageraad2len*1.0/ (sunrise_start_min_before * 60));
+        /* "leds van een bepaalde kleur" */
+        //Serial.println(fractie);
+        R = dageraad2[fractie] [0];
+        G = dageraad2[fractie] [1];
+        B = dageraad2[fractie] [2];
+      }
     }
     myNeo_PixelStrook.ColorSet(myNeo_PixelStrook.Color(R,G,B));
     
