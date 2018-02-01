@@ -30,6 +30,7 @@ unsigned long ard_effect0_start, ard_effect0_time;
 #define EFFECT0_PERIOD (dotDuration * 2)
 #define EFFECT0_1_DURATION dotDuration
 
+
 void dot() {
   //Variables of this effect are reffered to with ard_effect0
   boolean restart = false;
@@ -323,7 +324,7 @@ void beepCris() {
   }
 }
 
-void buzzer_setup() {
+void setup_buzzer() {
   
   pinMode(buzzer, OUTPUT);
   ard_effect0_status = -1;
