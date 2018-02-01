@@ -77,6 +77,7 @@ unsigned long sunrise_millis = sunrise_start_min_before * 60 * 1000;
 uint8_t alarm_sunrise_start_min, alarm_sunrise_start_hour, alarm_sunrise_stop_min, alarm_sunrise_stop_hour;
 unsigned int alarm_min_hour, alarm_sunrise_start_min_hour, alarm_sunrise_stop_min_hour;
 long sec_from_alarm;
+long millis_from_alarm;
 
 unsigned long NTPUpdateInterval = 60000 ;
  
@@ -438,9 +439,11 @@ void determine_alarm_time() {
   uint8_t curmin = minute(localtimenow);
   uint8_t curhour = hour(localtimenow);
   uint8_t cursec = second(localtimenow);
+  uint8_t curmillis = millis() % 1000;
   unsigned long curminhour = curhour * 60 + curmin;
   
   sec_from_alarm = 0;
+  millis_from_alarm = 0;
   if (!alarm_over_midnight) {
     if (curminhour >= alarm_sunrise_start_min_hour && curminhour < alarm_sunrise_stop_min_hour) {
       // do alarm !
@@ -470,6 +473,7 @@ void determine_alarm_time() {
   //before the alarm time eg 7:39 with alarm at 7:40 gives -1 minute
   //after the alarm time eg 7:41 with alarm at 7:40 gives +1 minute
   sec_from_alarm = sec_from_alarm * 60 + cursec;  // convert min to sec
+  millis_from_alarm = sec_from_alarm * 1000 + curmillis;
   
   if (SERIALTESTOUTPUT) {
     Serial.println("Computed alarm values");
