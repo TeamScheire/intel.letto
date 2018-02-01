@@ -155,8 +155,10 @@ void setup() {
 
   u8g2.begin();
   initial_display(false);
-  
-  util_startWIFI(true); // Connect to local Wifi
+
+  while (WiFi.status() != WL_CONNECTED) {
+   util_startWIFI(true); // Connect to local Wifi
+  }
   // connect to NTP 
   timeClient.begin();   // Start the NTP UDP client
   
@@ -193,7 +195,8 @@ void setup() {
   //scanner
 //  myNeo_PixelStrook.Scanner(myNeo_PixelStrook.Color(255,0,0), 55);
   //do nothing
-//  myNeo_PixelStrook.show();
+  myNeo_PixelStrook.ColorSet(myNeo_PixelStrook.Color(0, 0, 0));
+  myNeo_PixelStrook.show();
 
 }
 
@@ -231,6 +234,7 @@ void loop() {
       displayDateTime();
     } else {
       // no display
+      displayEmpty();
     }
 
     //buzzer in normal mode
@@ -256,18 +260,23 @@ void loop() {
     // neopixel part light in normal mode
     if (knop_waarde == 1 && Drukknop1PressType == Drukknop1SHORTPRESS) {
       // no light
-      myNeo_PixelStrook.ColorSet(Stick.Color(0, 0, 0));
+      myNeo_PixelStrook.ColorSet(myNeo_PixelStrook.Color(0, 0, 0));
     } else if (knop_waarde == 2 && Drukknop1PressType == Drukknop1SHORTPRESS) {
       //scanner
       myNeo_PixelStrook.Scanner(myNeo_PixelStrook.Color(255,0,0), 55);  // set neopixel in scanner mode
       
-    } else if (knop_waarde == 3 && Drukknop1PressType == Drukknop1SHORTPRESS)) {
+    } else if (knop_waarde == 3 && Drukknop1PressType == Drukknop1SHORTPRESS) {
       myNeo_PixelStrook.TheaterChase(myNeo_PixelStrook.Color(255,255,0), myNeo_PixelStrook.Color(0,0,50), 100);
-    } else if (knop_waarde == 4 && Drukknop1PressType == Drukknop1SHORTPRESS)) {
+    } else if (knop_waarde == 4 && Drukknop1PressType == Drukknop1SHORTPRESS) {
       myNeo_PixelStrook.RainbowCycle(3);
-    } else if (knop_waarde == 5 && Drukknop1PressType == Drukknop1SHORTPRESS)) {
-      myNeo_PixelStrook.Fade(myNeo_PixelStrook.Color(255,255,0), myNeo_PixelStrook.Color(0,255,255), 100, 20);
+    } else if (knop_waarde == 5 && Drukknop1PressType == Drukknop1SHORTPRESS) {
+      myNeo_PixelStrook.ColorWipe(myNeo_PixelStrook.Color(255, 214, 170), 100);
+    } else if (knop_waarde == 6 && Drukknop1PressType == Drukknop1SHORTPRESS) {
+      //warm white light
+      myNeo_PixelStrook.ColorSet(myNeo_PixelStrook.Color(255, 214, 170));
+      myNeo_PixelStrook.show();
     }
+    if (knop_waarde == 2 || knop_waarde == 3 || knop_waarde == 4 || knop_waarde == 5 )
     myNeo_PixelStrook.Update();
     
   } else {

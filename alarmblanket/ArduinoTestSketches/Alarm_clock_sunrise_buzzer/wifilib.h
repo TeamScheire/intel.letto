@@ -75,6 +75,7 @@ void setupWiFi(bool wait)
   }
 
   if (wait) {
+    unsigned long startwait = millis();
     while (WiFi.status() != WL_CONNECTED) {
       nrpoints += 1;
       delay(500);
@@ -84,6 +85,9 @@ void setupWiFi(bool wait)
       if (nrpoints > 50) {
         nrpoints = 0;
          if (SERIALTESTOUTPUT) Serial.println(" ");
+      }
+      if (millis() - startwait > 20000L ) {
+        return;
       }
     }
     
