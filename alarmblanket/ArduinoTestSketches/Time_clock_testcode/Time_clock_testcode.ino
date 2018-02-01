@@ -19,6 +19,7 @@ unsigned long NTPstartTijd;
 unsigned long NTPlastUpdate;
 time_t utc;
 unsigned long huidigeTijd;
+unsigned long wifireconnectTime = 0;
 
 #include <ESP8266WiFi.h>
 //#include <WifiUDP.h>
@@ -39,6 +40,10 @@ int pSDA = D2;
 int pSCL = D1;
 // Use U8X8_PIN_NONE if the reset pin is not connected
 #define REPORTING_PERIOD_MS     500
+
+bool use_static_IP = false;         //use a static IP address
+uint8_t static_IP[4] = {192, 168, 1, 42}; 
+uint8_t static_gateway_IP[4] = {192, 168, 1, 1};// if you want to use static IP make sure you know what the gateway IP is, here 192.168.1.1
 
 // wifi data
 //const char* ssid = "*****";   // insert your own ssid 
@@ -71,6 +76,63 @@ const char * days[] = {"Zo", "Ma", "Di", "Wo", "Do", "Vr", "Za"} ;
 const char * months[] = {"Jan", "Feb", "Maa", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"} ;
 const char * ampm[] = {"VM", "NM"} ;
 
+
+// set up the wifi connection. If wait, we wait for the wifi to come up
+// indefenitely
+void setupWiFi(bool wait)
+{
+  int nrpoints;
+  // Connect to WiFi network
+  if (SERIALTESTOUTPUT) {
+    Serial.println();
+    Serial.println();
+    Serial.print("Connecting to ");
+    Serial.println(ssid);
+  }
+
+  //we only try to set up wifi once every 2 minutes !
+  if (wait || (millis() - wifireconnectTime > 2*60000L)) { 
+    //clean up any old config that are still present
+    WiFi.softAPdisconnect();
+    WiFi.disconnect();
+    if (use_static_IP) {
+      // we force a static IP for this station and set 
+      IPAddress  stationIP(static_IP[0], static_IP[1], static_IP[2], static_IP[3]);
+      IPAddress gateway(static_gateway_IP[0], static_gateway_IP[1], static_gateway_IP[2], static_gateway_IP[3]); // set gateway to match your network
+      IPAddress subnet(255, 255, 255, 0); // set subnet mask to match yourelse
+      WiFi.mode(WIFI_STA);
+      delay(100);
+      
+      //set a static IP address
+      WiFi.config(stationIP, gateway, subnet);
+    } else {
+      WiFi.mode(WIFI_AP);
+    }
+    WiFi.begin(ssid, password);
+    wifireconnectTime = millis();
+  }
+
+  if (wait) {
+    while (WiFi.status() != WL_CONNECTED) {
+      nrpoints += 1;
+      delay(500);
+      if (SERIALTESTOUTPUT) {
+        Serial.print(".");
+      }
+      if (nrpoints > 50) {
+        nrpoints = 0;
+         if (SERIALTESTOUTPUT) Serial.println(" ");
+      }
+    }
+    
+    if (SERIALTESTOUTPUT) {
+      Serial.println("");
+      Serial.println("WiFi connected");
+    }
+  } 
+}
+
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200); // most ESP-01's use 115200 but this could vary
@@ -84,17 +146,8 @@ void setup() {
   Serial.println("");
   Serial.print("Connecting to ");
   Serial.print(ssid);
-  WiFi.begin(ssid, password);
-  int nrpoints = 0;
-  while (WiFi.status() != WL_CONNECTED) 
-  { nrpoints += 1;
-    delay(500);
-    Serial.print(".");
-    if (nrpoints > 50) {
-      nrpoints = 0;
-      Serial.println(" ");
-    }
-  }
+  setupWiFi(true);
+  
   timeClient.begin();   // Start the NTP UDP client
   Serial.println("");
   Serial.print("Connected to WiFi at ");
@@ -215,7 +268,7 @@ void obtainDateTime() {
   } else {
     //reconnect
     obtainedwifi = false;
-    WiFi.begin(ssid, password);
+    setupWiFi(false);
   }
 }
 

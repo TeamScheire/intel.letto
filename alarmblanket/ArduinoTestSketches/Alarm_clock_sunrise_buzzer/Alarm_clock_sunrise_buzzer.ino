@@ -44,19 +44,17 @@ bool alarm_sunrise_set = true;  // do alarm or not
 uint8_t sunrise_start_min_before = 20;  // minutes to start sunrise before alarm time (max 59)
 uint8_t beep_start_min_before = 5;
 bool dageraad1on = false;
+bool use_static_IP = false;         //use a static IP address
+uint8_t static_IP[4] = {192, 168, 1, 42}; 
+uint8_t static_gateway_IP[4] = {192, 168, 1, 1};// if you want to use static IP make sure you know what the gateway IP is, here 192.168.1.1
 
 // wifi data
 // write here your wifi credentials 
-//const char* ssid = "*****";   // insert your own ssid 
-//const char* password = "********"; // and password
-
-// if you want to use static IP make sure you know what the gateway IP is, here 192.168.1.1
-// we force a static IP for this station and set 
-IPAddress  stationIP(192, 168, 1, 42);
-IPAddress gateway(192, 168, 1, 1); // set gateway to match your network
-IPAddress subnet(255, 255, 255, 0); // set subnet mask to match your
+const char* ssid = "*****";   // insert your own ssid 
+const char* password = "********"; // and password
 
 /*  END USER SETTABLE OPTIONS */
+
 
 /* WIRING OF THE ALARM */
 int knop_waarde;
@@ -86,6 +84,7 @@ unsigned long NTPstartTijd;
 unsigned long NTPlastUpdate;
 time_t utc, localtimenow;
 unsigned long huidigeTijd;
+unsigned long wifireconnectTime = 0;
 
 IPAddress ip;
 bool obtainedwifi = false;
@@ -210,7 +209,9 @@ void determine_alarm_values(uint8_t alarm_hour, uint8_t alarm_min, uint8_t sunri
   }
 }
 
-void setupWiFi()
+// set up the wifi connection. If wait, we wait for the wifi to come up
+// indefenitely
+void setupWiFi(bool wait)
 {
   int nrpoints;
   // Connect to WiFi network
@@ -220,46 +221,60 @@ void setupWiFi()
     Serial.print("Connecting to ");
     Serial.println(ssid);
   }
-  
-  //clean up any old config that are still present
-  WiFi.softAPdisconnect();
-  WiFi.disconnect();
-  WiFi.mode(WIFI_STA);
-  delay(100);
-  
-  //set a static IP address
-  WiFi.config(stationIP, gateway, subnet);
-  WiFi.begin(ssid, password);
- 
-  while (WiFi.status() != WL_CONNECTED) {
-    nrpoints += 1;
-    delay(500);
+
+  //we only try to set up wifi once every 2 minutes !
+  if (wait || (millis() - wifireconnectTime > 2*60000L)) {
+    //clean up any old config that are still present
+    WiFi.softAPdisconnect();
+    WiFi.disconnect();
+    if (use_static_IP) {
+      // we force a static IP for this station and set 
+      IPAddress  stationIP(static_IP[0], static_IP[1], static_IP[2], static_IP[3]);
+      IPAddress gateway(static_gateway_IP[0], static_gateway_IP[1], static_gateway_IP[2], static_gateway_IP[3]); // set gateway to match your network
+      IPAddress subnet(255, 255, 255, 0); // set subnet mask to match yourelse
+      WiFi.mode(WIFI_STA);
+      delay(100);
+      
+      //set a static IP address
+      WiFi.config(stationIP, gateway, subnet);
+    } else {
+      WiFi.mode(WIFI_AP);
+    }
+    WiFi.begin(ssid, password);
+    wifireconnectTime = millis();
+  }
+
+  if (wait) {
+    while (WiFi.status() != WL_CONNECTED) {
+      nrpoints += 1;
+      delay(500);
+      if (SERIALTESTOUTPUT) {
+        Serial.print(".");
+      }
+      if (nrpoints > 50) {
+        nrpoints = 0;
+         if (SERIALTESTOUTPUT) Serial.println(" ");
+      }
+    }
+    
     if (SERIALTESTOUTPUT) {
-      Serial.print(".");
+      Serial.println("");
+      Serial.println("WiFi connected");
     }
-    if (nrpoints > 50) {
-      nrpoints = 0;
-       if (SERIALTESTOUTPUT) Serial.println(" ");
-    }
-  }
-  
-  if (SERIALTESTOUTPUT) {
-    Serial.println("");
-    Serial.println("WiFi connected");
-  }
+  } 
 }
 
 /********************************************************
  * connect to local Wifi
- * Function: util_startWIFI(void)
+ * Function: util_startWIFI(bool wait)
  * 
  * Parameter    Description
  * ---------    ---------------------------------------
  * return       no return value
  ********************************************************/
-void util_startWIFI(void) {
+void util_startWIFI(bool wait) {
   //start the wifi
-  setupWiFi();
+  setupWiFi(wait);
 }
 
 
@@ -283,7 +298,7 @@ void setup() {
   //pushbutton setup
   knop_waarde = 1;
   
-  util_startWIFI();                    // Connect to local Wifi
+  util_startWIFI(true); // Connect to local Wifi
   // connect to NTP 
   timeClient.begin();   // Start the NTP UDP client
   
@@ -408,8 +423,7 @@ void loop() {
   // if disconnected, reconnect to wifi:
   if ( WiFi.status() != WL_CONNECTED) {
       delay(1);
-      util_startWIFI();
-      return;
+      util_startWIFI(false);
   }
     
   if (SERIALTESTOUTPUT) {
@@ -561,7 +575,6 @@ void obtainDateTime() {
   } else {
     //reconnect
     obtainedwifi = false;
-    WiFi.begin(ssid, password);
   }
 }
 
