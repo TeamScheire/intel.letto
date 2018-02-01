@@ -323,7 +323,7 @@ class NeoPatterns : public Adafruit_NeoPixel
         uint8_t blue = ((Blue(Color1) * (TotalSteps - Index)) + (Blue(Color2) * Index)) / TotalSteps;
         
         ColorSet(Color(red, green, blue));
-        show();
+        //show();
         Increment();
     }
    

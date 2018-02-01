@@ -267,7 +267,7 @@ unsigned long ard_effect5_start, ard_effect5_time;
 #define EFFECT5_7_DURATION 375
 #define EFFECT5_8_DURATION 400
 
-void beepCris() {
+void beepGallop() {
   //Variables of this effect are reffered to with ard_effect5
   boolean restart = false;
   ard_effect5_time = millis() - ard_effect5_start;

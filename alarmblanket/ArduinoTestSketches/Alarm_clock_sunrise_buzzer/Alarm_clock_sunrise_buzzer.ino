@@ -14,8 +14,8 @@
 
 /*  START USER SETTABLE OPTIONS */
 // alarm
-uint8_t alarm_hour = 7;
-uint8_t alarm_min = 0;
+uint8_t alarm_hour = 6;
+uint8_t alarm_min = 50;
 bool alarm_sunrise_set = true;  // do alarm or not
 uint8_t sunrise_start_min_before = 20;  // minutes to start sunrise before alarm time (max 59)
 uint8_t beep_start_min_before = 5;
@@ -66,6 +66,9 @@ int pSCL = D1;
 
 // pushbutton handling code
 #include "pushbuttonlib.h"
+
+// scenario lib for waking up
+#include "wakescenario.h"
 
 // variables
 
@@ -155,6 +158,12 @@ void setup() {
 
   u8g2.begin();
   initial_display(false);
+  
+  // Initialize the pixelStrips
+  myNeo_PixelStrook.begin();
+  // show no color
+  myNeo_PixelStrook.ColorSet(myNeo_PixelStrook.Color(0, 0, 0));
+  myNeo_PixelStrook.show();
 
   while (WiFi.status() != WL_CONNECTED) {
    util_startWIFI(true); // Connect to local Wifi
@@ -181,22 +190,6 @@ void setup() {
   obtainDateTime();
   NTPstartTijd = millis();
   huidigeTijd = NTPstartTijd;
-  
-  // Initialize the pixelStrips
-  myNeo_PixelStrook.begin();
-    
-  // Kick off a pattern, uncomment one of the following
-  // theaterchase
-//  myNeo_PixelStrook.TheaterChase(myNeo_PixelStrook.Color(255,255,0), 
-//                                 myNeo_PixelStrook.Color(0,0,50), 100);
-  //rainbowcycle
-//  myNeo_PixelStrook.RainbowCycle(3);
-//  myNeo_PixelStrook.Color1 = myNeo_PixelStrook.Color(255,255,0);
-  //scanner
-//  myNeo_PixelStrook.Scanner(myNeo_PixelStrook.Color(255,0,0), 55);
-  //do nothing
-  myNeo_PixelStrook.ColorSet(myNeo_PixelStrook.Color(0, 0, 0));
-  myNeo_PixelStrook.show();
 
 }
 
@@ -239,23 +232,6 @@ void loop() {
 
     //buzzer in normal mode
     analogWrite(buzzer, 0);
-//    if (knop_waarde == 1) {
-//      beepstrength = 20;
-//      beep();
-//    } else if (knop_waarde == 2) {
-//      beepstrength = 120;
-//      beep();
-//    } else if (knop_waarde == 3) {
-//      beepCris();
-//    } else if (knop_waarde == 4) {
-//      beepstrength = 120;
-//      dash();
-//    } else if (knop_waarde == 5) {
-//      beepstrength = 255;
-//      SOS();
-//    } else if (knop_waarde == 6) {
-//      analogWrite(buzzer, 0);
-//    }
 
     // neopixel part light in normal mode
     if (knop_waarde == 1 && Drukknop1PressType == Drukknop1SHORTPRESS) {
@@ -289,24 +265,26 @@ void loop() {
     // neopixel part In alarm mode, neopixel show the color that goes with the sunrise
     sunrise_color();
 
-    // buzzer part In alarm mode - buzzer has a buzzer status
-    if (knop_waarde == 6) {
-      analogWrite(buzzer, 0); // switch off the buzzer when 6x pressed.
-    } else {
-      //we do alarm
-      if (sec_from_alarm > 0) {
-        //full alarm
-        beepstrength = 200; // max 255 but not as clear !
-        dash();
-      } else {
-        //pre alarm, we should increase the power as we are closer to alarm
-        unsigned long beep_sec = beep_start_min_before * 60 + sec_from_alarm;
-        if (beep_sec > 0) {
-          //beep_sec is value between and beep_start_min_before * 60, we map to 0 to 200
-          beepstrength = map(beep_sec, 0, beep_start_min_before * 60, 0, 200);
-          beepCris();
-        }
-      }
+    determine_wake_scenario(sec_from_alarm, millis_from_alarm, beepstrength);
+    
+    // buzzer part We query wake scenario and operate buzzer
+    if (buzzer2sound == BUZZ_OFF) {
+      analogWrite(buzzer, 0);
+    } else if (Drukknop1PressType == Drukknop1SHORTPRESS && sec_from_alarm > 0) {
+      // on press while in alarm mode after alarm mode, we snooze buzzer
+      snoozetimeon = true;
+      snoozetimestart = millis();
+    }
+    if (buzzer2sound == BUZZ_BEEPGALLOP) {
+      beepGallop();
+    } else if (buzzer2sound == BUZZ_DASH) {
+      dash();
+    } else if (buzzer2sound == BUZZ_DOT) {
+      dot();
+    } else if (buzzer2sound == BUZZ_BEEP) {
+      beep();
+    } else if (buzzer2sound == BUZZ_SOS) {
+      SOS();
     }
   }
   
@@ -331,6 +309,8 @@ void determine_alarm_time() {
   uint8_t cursec = second(localtimenow);
   uint8_t curmillis = millis() % 1000;
   unsigned long curminhour = curhour * 60 + curmin;
+
+  bool old_alarm_sunrise_on = alarm_sunrise_on;
   
   sec_from_alarm = 0;
   millis_from_alarm = 0;
@@ -358,6 +338,13 @@ void determine_alarm_time() {
     } else {
       alarm_sunrise_on = false;
     }
+
+  }
+  if (old_alarm_sunrise_on != alarm_sunrise_on && alarm_sunrise_on) {
+    // alarm has started for the first time! 
+    // reset buttons 
+    knop_waarde = 1;
+    knop_longpress_waarde = 1;
   }
   
   //before the alarm time eg 7:39 with alarm at 7:40 gives -1 minute
@@ -508,7 +495,19 @@ void sunrise_color() {
         B = dageraad2[fractie] [2];
       }
     }
-    myNeo_PixelStrook.ColorSet(myNeo_PixelStrook.Color(R,G,B));
+    
+    if (sec_from_alarm > 0) {
+      // we fade in and out 
+      myNeo_PixelStrook.ActivePattern = FADE;
+      myNeo_PixelStrook.Interval = 20; // shorter is faster
+      myNeo_PixelStrook.TotalSteps = 100; //steps in the fade in to out. 
+      myNeo_PixelStrook.Color1 = myNeo_PixelStrook.Color(0,0,0);
+      myNeo_PixelStrook.Color2 = myNeo_PixelStrook.Color(R,G,B);
+      // make sure we see the color
+      myNeo_PixelStrook.Update();
+    } else {
+      myNeo_PixelStrook.ColorSet(myNeo_PixelStrook.Color(R,G,B));
+    }
     
     if (SERIALTESTOUTPUT) {
       Serial.print("Setting Neopixel to color ( ");Serial.print(R);Serial.print(",");Serial.print(G);
