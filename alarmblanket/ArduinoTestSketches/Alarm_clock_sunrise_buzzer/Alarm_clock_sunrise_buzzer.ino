@@ -83,6 +83,7 @@ long millis_from_alarm;
 // Create a display object
 U8G2_SSD1306_128X32_UNIVISION_F_SW_I2C u8g2(U8G2_R0, pSCL, pSDA, U8X8_PIN_NONE);
 //U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE, pSDA, pSCL);
+bool displayempty = true;
 
 bool initialized = false;
 
@@ -190,7 +191,7 @@ void setup() {
 //  myNeo_PixelStrook.RainbowCycle(3);
 //  myNeo_PixelStrook.Color1 = myNeo_PixelStrook.Color(255,255,0);
   //scanner
-  myNeo_PixelStrook.Scanner(myNeo_PixelStrook.Color(255,0,0), 55);
+//  myNeo_PixelStrook.Scanner(myNeo_PixelStrook.Color(255,0,0), 55);
   //do nothing
 //  myNeo_PixelStrook.show();
 
@@ -201,12 +202,87 @@ void loop() {
   handleDrukknop1Press();
 
 
-  /** DO ACTIONS BASED ON PUSHBUTTON PRESSES */
-  if (alarm_sunrise_set && alarm_sunrise_on) {
-    // we are in alarm mode !!
-    // if 6x btn pressed, we switch alarm off
+  /** START DETERMINE ALARM OR NOT */
+  huidigeTijd = millis();
+  if (huidigeTijd - NTPstartTijd > NTPUpdateInterval) {
+    //reupdate NTP data
+    obtainDateTime();
+    //reset NTPstart time
+    NTPstartTijd = millis();
+  }
+  
+  //determine if alarm needed
+  if (alarm_sunrise_set) {
+    if (SERIALTESTOUTPUT) Serial.println("Alarm set");
+    determine_alarm_time();
+    // now sec_from_alarm and millis_from_alarm are set !
+    // also now alarm_sunrise_on is true or false
+  }
+  /** END DETERMINE ALARM OR NOT */
+
+  /** TWO POSSIBLE STATES: ALARM MODE OR NORMAL MODE */
+  if (! alarm_sunrise_set || ! alarm_sunrise_on ) {
+    /* NORMAL MODE */ 
+
+    //display in normal mode
+    // Long press switches display on or off
+    if (knop_longpress_waarde == 1) {
+      // we show date and time 
+      displayDateTime();
+    } else {
+      // no display
+    }
+
+    //buzzer in normal mode
+    analogWrite(buzzer, 0);
+//    if (knop_waarde == 1) {
+//      beepstrength = 20;
+//      beep();
+//    } else if (knop_waarde == 2) {
+//      beepstrength = 120;
+//      beep();
+//    } else if (knop_waarde == 3) {
+//      beepCris();
+//    } else if (knop_waarde == 4) {
+//      beepstrength = 120;
+//      dash();
+//    } else if (knop_waarde == 5) {
+//      beepstrength = 255;
+//      SOS();
+//    } else if (knop_waarde == 6) {
+//      analogWrite(buzzer, 0);
+//    }
+
+    // neopixel part light in normal mode
+    if (knop_waarde == 1 && Drukknop1PressType == Drukknop1SHORTPRESS) {
+      // no light
+      myNeo_PixelStrook.ColorSet(Stick.Color(0, 0, 0));
+    } else if (knop_waarde == 2 && Drukknop1PressType == Drukknop1SHORTPRESS) {
+      //scanner
+      myNeo_PixelStrook.Scanner(myNeo_PixelStrook.Color(255,0,0), 55);  // set neopixel in scanner mode
+      
+    } else if (knop_waarde == 3 && Drukknop1PressType == Drukknop1SHORTPRESS)) {
+      myNeo_PixelStrook.TheaterChase(myNeo_PixelStrook.Color(255,255,0), myNeo_PixelStrook.Color(0,0,50), 100);
+    } else if (knop_waarde == 4 && Drukknop1PressType == Drukknop1SHORTPRESS)) {
+      myNeo_PixelStrook.RainbowCycle(3);
+    } else if (knop_waarde == 5 && Drukknop1PressType == Drukknop1SHORTPRESS)) {
+      myNeo_PixelStrook.Fade(myNeo_PixelStrook.Color(255,255,0), myNeo_PixelStrook.Color(0,255,255), 100, 20);
+    }
+    myNeo_PixelStrook.Update();
+    
+  } else {
+    /* ALARM MODE */ 
+    
+    // display part
+    // In alarm mode always show the date & time
+    displayDateTime();
+    
+    // neopixel part In alarm mode, neopixel show the color that goes with the sunrise
+    sunrise_color();
+
+    // buzzer part In alarm mode - buzzer has a buzzer status
     if (knop_waarde == 6) {
-      analogWrite(buzzer, 0);
+      analogWrite(buzzer, 0); // switch off the buzzer when 6x pressed.
     } else {
       //we do alarm
       if (sec_from_alarm > 0) {
@@ -217,52 +293,15 @@ void loop() {
         //pre alarm, we should increase the power as we are closer to alarm
         unsigned long beep_sec = beep_start_min_before * 60 + sec_from_alarm;
         if (beep_sec > 0) {
-          //beep_sec is value between and beep_start_min_before * 60, we map to 0 to 250
-          beepstrength = map(beep_sec, 0, beep_start_min_before * 60, 0, 250);
+          //beep_sec is value between and beep_start_min_before * 60, we map to 0 to 200
+          beepstrength = map(beep_sec, 0, beep_start_min_before * 60, 0, 200);
           beepCris();
         }
       }
     }
-  } else {
-    // no alarm mode, we test buzzer and other things
-    if (knop_waarde == 1) {
-      beepstrength = 20;
-      beep();
-    } else if (knop_waarde == 2) {
-      beepstrength = 120;
-      beep();
-    } else if (knop_waarde == 3) {
-      beepCris();
-    } else if (knop_waarde == 4) {
-      beepstrength = 120;
-      dash();
-    } else if (knop_waarde == 5) {
-      beepstrength = 255;
-      SOS();
-    } else if (knop_waarde == 6) {
-      analogWrite(buzzer, 0);
-    }
-  }
-
-  /** DETERMINE ALARM OR NOT */
-  huidigeTijd = millis();
-  if (huidigeTijd - NTPstartTijd > NTPUpdateInterval) {
-    //reupdate NTP data
-    obtainDateTime();
-    //reset NTPstart time
-    NTPstartTijd = millis();
   }
   
-  // Display the date and time
-  displayDateTime();
   
-  //determine if alarm needed
-  if (alarm_sunrise_set) {
-    if (SERIALTESTOUTPUT) Serial.println("Alarm set");
-    determine_alarm_time();
-    sunrise_color();
-    
-  }
   // if disconnected, reconnect to wifi:
   if ( WiFi.status() != WL_CONNECTED) {
       delay(1);
@@ -354,14 +393,25 @@ void initial_display(bool wifi)
     write_wifi(wifi);
     u8g2.sendBuffer();          // transfer internal memory to the display
     delay(1000);  
+    displayempty = false;
   
   }
+}
+
+// nothing on display
+void displayEmpty() {
+  if (displayempty) return;
+
+  u8g2.clearBuffer();   // clear the internal memory
+  u8g2.sendBuffer();    // transfer internal memory to the display
+  displayempty = true;
 }
 
 // display the time on the OLED
 void displayDateTime() {
     date = "";  // clear the variables
     t = "";
+    displayempty = false;
   
     // print the date and time on the OLED
     u8g2.clearBuffer(); // clear the internal memory
