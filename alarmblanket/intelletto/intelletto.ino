@@ -30,6 +30,10 @@ uint8_t static_gateway_IP[4] = {192, 168, 1, 1};// if you want to use static IP 
 const char* ssid = "*****";   // insert your own ssid 
 const char* password = "********"; // and password
 
+//mqtt server/broker 
+//const char* mqtt_server = "broker.mqtt-dashboard.com";
+const char* mqtt_server = "192.168.0.111";
+
 /*  END USER SETTABLE OPTIONS */
 
 
@@ -167,10 +171,15 @@ void setup() {
   myNeo_PixelStrook.show();
 
   while (WiFi.status() != WL_CONNECTED) {
-   util_startWIFI(true); // Connect to local Wifi
+   setupWiFi(true); // Connect to local Wifi
   }
+  //set randomseed
+  randomSeed(micros());
+  
   // connect to NTP 
   timeClient.begin();   // Start the NTP UDP client
+  // mqtt client start
+  setupMQTTClient();
   
   if (SERIALTESTOUTPUT) {
     Serial.println("");
@@ -198,6 +207,8 @@ void loop() {
   //handle pushbutton press
   handleDrukknop1Press();
 
+  //handle MQTT messages
+  handleMQTTClient();
 
   /** START DETERMINE ALARM OR NOT */
   huidigeTijd = millis();
@@ -261,6 +272,32 @@ void loop() {
     if (knop_waarde == 2 || knop_waarde == 3 || knop_waarde == 4 || knop_waarde == 5 ) {
       myNeo_PixelStrook.Update();
     }
+
+    // no alarm, plugs are in free mode
+    if (ventilator != VENT_FREE) {
+      // alarm was on, now it is off. Switch plugs off if they were ON
+      if (ventilator == VENT_ON) {
+        // switch plug off before putting in FREE MODE
+        ventilator = VENT_OFF;
+        ventchanged = true;
+      } else {
+        // switch plug to free mode from OFF
+        ventilator = VENT_FREE;
+        ventchanged = true;
+      }
+    }
+    if (wakelight != LIGHT_FREE) {
+      // alarm was on, now it is off. Switch plugs off if they were ON
+      if (wakelight == LIGHT_ON) {
+        // switch plug off before putting in FREE MODE
+        wakelight = LIGHT_OFF;
+        wakelightchanged = true;
+      } else {
+        // switch plug to free mode from OFF
+        wakelight = LIGHT_FREE;
+        wakelightchanged = true;
+      }
+    }
     
   } else {
     /* ALARM MODE */ 
@@ -293,17 +330,40 @@ void loop() {
     } else if (buzzer2sound == BUZZ_SOS) {
       SOS();
     }
+
   }
   
   
   // if disconnected, reconnect to wifi:
   if ( WiFi.status() != WL_CONNECTED) {
       delay(1);
-      util_startWIFI(false);
+      setupWiFi(false);
   }
-    
+
+  //we publish MQTT messages as needed, and repeat them every 60 sec
+  if (ventchanged || huidigeTijd - mqttventmsgtime > mqttmsginterval) {
+    // send message to ventilator with the required setting:
+    if (ventilator == VENT_ON) {
+      MQTTpublish("cmnd/sonoff_ventilator/power", "1");
+    } else if (ventilator == VENT_OFF) {
+      MQTTpublish("cmnd/sonoff_ventilator/power", "0");
+    }
+    ventchanged = false;
+    mqttventmsgtime = huidigeTijd;
+  }
+  if (wakelightchanged || huidigeTijd - mqttwakelightmsgtime > mqttmsginterval) {
+    // send message to ventilator with the required setting:
+    if (wakelight == LIGHT_ON) {
+      MQTTpublish("cmnd/sonoff_light/power", "1");
+    } else if (wakelight == LIGHT_OFF) {
+      MQTTpublish("cmnd/sonoff_light/power", "0");
+    }
+    wakelightchanged = false;
+    mqttwakelightmsgtime = huidigeTijd;
+  }
+  
   if (SERIALTESTOUTPUT) {
-    delay(1000);
+    delay(500);
   } 
 }
 

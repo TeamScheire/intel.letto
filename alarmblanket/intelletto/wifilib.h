@@ -7,6 +7,11 @@
 #include <TimeLib.h>
 #include <Timezone.h>
 
+//MQTT library
+#include <PubSubClient.h>
+
+bool personinbed = true;
+
 unsigned long NTPUpdateInterval = 60000 ;
  
 unsigned long NTPstartTijd;
@@ -14,6 +19,7 @@ unsigned long NTPlastUpdate;
 time_t utc, localtimenow;
 unsigned long huidigeTijd;
 unsigned long wifireconnectTime = 0;
+unsigned long mqttreconnectTime = 0;
 
 IPAddress ip;
 bool obtainedwifi = false;
@@ -28,6 +34,10 @@ bool UK_DATE = false;
 // Set up the NTP UDP client
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, NTP_ADDRESS, NTP_OFFSET, NTP_INTERVAL);
+
+// Set up the MQTT client
+WiFiClient espClient;
+PubSubClient MQTTclient(espClient);
 
 String date;
 String t;
@@ -98,19 +108,111 @@ void setupWiFi(bool wait)
   } 
 }
 
-/********************************************************
- * connect to local Wifi
- * Function: util_startWIFI(bool wait)
- * 
- * Parameter    Description
- * ---------    ---------------------------------------
- * return       no return value
- ********************************************************/
-void util_startWIFI(bool wait) {
-  //start the wifi
-  setupWiFi(wait);
+void MQTTsubscribe2topics() {
+  //write here all MQTT topics we subscribe to. Act on it in the callback!
+  MQTTclient.subscribe("intelletto");
 }
 
+void MQTTpublish_reconnected() {
+  //publish a message that we connected to 
+  MQTTclient.publish("intellettoStatus", "Alarm reconnected to MQTTserver");
+}
+
+boolean MQTTpublish(const char* topic, const char* payload) {
+  // API to publish to the server. 
+  // this is used by intelletto to 
+  // 1. switch on/off sonoff plugs
+  // 2. control massage
+  // 3. control heating
+  MQTTclient.publish(topic, payload);
+}
+
+void MQTTreconnect() {
+  // We connect to the MQTT broker
+  
+  //we only try to set up mqtt connection once every 1 minutes !
+  if (!MQTTclient.connected() && millis() - mqttreconnectTime > 1*60000L) {
+    if (SERIALTESTOUTPUT) {
+     Serial.print("Attempting MQTT connection...");
+    }
+    // Create a random client ID
+    String clientId = "ESP8266AlarmClient-";
+    clientId += String(random(0xffff), HEX);
+    // Attempt to connect
+    if (MQTTclient.connect(clientId.c_str())) {
+      if (SERIALTESTOUTPUT) {
+        Serial.println("connected");
+      }
+      // Once connected, publish an announcement ?
+      MQTTpublish_reconnected();
+      // ... and resubscribe to all topics
+      MQTTsubscribe2topics();
+    } else {
+      if (SERIALTESTOUTPUT) {
+        Serial.print("failed, rc=");
+        Serial.print(MQTTclient.state());
+        Serial.println(" try again in 5 seconds");
+      }
+    }
+    mqttreconnectTime = millis();
+  }
+}
+
+void MQTT_msg_callback(char* topic, byte* payload, unsigned int length) {
+  // if a topic subscribed to in reconnect occurs, this callback is called
+  if (SERIALTESTOUTPUT) {
+    Serial.print("Message arrived [");
+    Serial.print(topic);
+    Serial.print("] ");
+    for (int i = 0; i < length; i++) {
+      Serial.print((char)payload[i]);
+    }
+    Serial.println();
+  }
+
+  // The intelletto alarm subscribes to the intelletto topic
+  // Messages arrive from:
+  // 1. person in or out of bed: b0 or b1
+  // 2. optionnally DHT22 ?? 
+  // 3. Switch on the LED control command received. 
+  //    if a 1 was received as first character
+
+  if ((char)payload[0] == 'c') {
+    //control command. Set LED on or off
+    if ((char)payload[1] == '1') {
+      // Turn the LED on (Note that LOW is the voltage level
+      // but actually the LED is on; this is because it is acive low on the ESP-01)
+      digitalWrite(BUILTIN_LED, LOW);  
+    } else {
+      // Turn the LED off by making the voltage HIGH
+      digitalWrite(BUILTIN_LED, HIGH);  
+    }
+  }
+  if ((char)payload[0] == 'b') {
+    //message from the bed sensor. 
+    if ((char)payload[1] == '1') {
+      // Person is in the BED
+      personinbed = true;  
+    } else {
+      // Person is out of the BED
+      personinbed = false;  
+    }
+  }
+}
+
+void setupMQTTClient() {
+  // to call in the setup of the arduino
+  MQTTclient.setServer(mqtt_server, 1883);
+  MQTTclient.setCallback(MQTT_msg_callback);
+}
+
+void handleMQTTClient() {
+  // to call in the loop of the arduino
+  if (!MQTTclient.connected()) {
+    MQTTreconnect();
+  }
+  MQTTclient.loop();
+}
 
 void obtainDateTime() {
   if (WiFi.status() == WL_CONNECTED) //Check WiFi connection status
