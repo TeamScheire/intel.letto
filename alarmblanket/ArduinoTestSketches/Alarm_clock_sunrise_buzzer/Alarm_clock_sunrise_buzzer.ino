@@ -206,6 +206,8 @@ void loop() {
     //reset NTPstart time
     NTPstartTijd = millis();
   }
+  // compute current current time with min and sec
+  determine_localtimenow();
   
   //determine if alarm needed
   if (alarm_sunrise_set) {
@@ -225,6 +227,9 @@ void loop() {
     if (knop_longpress_waarde == 1) {
       // we show date and time 
       displayDateTime();
+    } else if (knop_longpress_waarde == 2) {
+      // we show date and time 
+      displayAlarm();
     } else {
       // no display
       displayEmpty();
@@ -252,8 +257,9 @@ void loop() {
       myNeo_PixelStrook.ColorSet(myNeo_PixelStrook.Color(255, 214, 170));
       myNeo_PixelStrook.show();
     }
-    if (knop_waarde == 2 || knop_waarde == 3 || knop_waarde == 4 || knop_waarde == 5 )
-    myNeo_PixelStrook.Update();
+    if (knop_waarde == 2 || knop_waarde == 3 || knop_waarde == 4 || knop_waarde == 5 ) {
+      myNeo_PixelStrook.Update();
+    }
     
   } else {
     /* ALARM MODE */ 
@@ -340,8 +346,8 @@ void determine_alarm_time() {
     }
 
   }
-  if (old_alarm_sunrise_on != alarm_sunrise_on && alarm_sunrise_on) {
-    // alarm has started for the first time! 
+  if (old_alarm_sunrise_on != alarm_sunrise_on) {
+    // alarm has started for the first time, or stopped! 
     // reset buttons 
     knop_waarde = 1;
     knop_longpress_waarde = 1;
@@ -403,6 +409,36 @@ void displayEmpty() {
   displayempty = true;
 }
 
+// display alarm time
+void displayAlarm() {
+
+  u8g2.clearBuffer();   // clear the internal memory
+  char alarmtime[5];
+  sprintf(alarmtime, "%02d:%02d",alarm_hour,alarm_min);
+  u8g2.setFont(u8g2_font_smart_patrol_nbp_tf); //9px font https://github.com/olikraus/u8g2/wiki/fntlistall
+  if (alarm_sunrise_set) {
+    u8g2.drawStr(0, 10, "Alarm AAN! Tijd:");
+  } else {
+    u8g2.drawStr(0, 10, "Alarm UIT! Tijd:");
+  }
+  u8g2.setFont(u8g2_font_profont17_tf); //11px font https://github.com/olikraus/u8g2/wiki/fntlistall
+  u8g2.drawStr(32, 25, alarmtime);
+  u8g2.sendBuffer();    // transfer internal memory to the display
+  displayempty = false;
+}
+
+void determine_localtimenow() {
+  time_t timenow = now();
+  // Then convert the UTC UNIX timestamp to local time
+
+  // Then convert the UTC UNIX timestamp to local time
+  // normal time from zon 2 march to sun 2 nov 
+  TimeChangeRule euBRU = {"BRU", Second, Sun, Mar, 2, +60};  //normal time UTC + 1 hours - change this as needed
+  TimeChangeRule euUCT = {"UCT", First, Sun, Nov, 2, 0};     //daylight saving time summer: UTC - change this as needed
+  Timezone euBrussel(euBRU, euUCT);
+  localtimenow = euBrussel.toLocal(timenow);
+}
+
 // display the time on the OLED
 void displayDateTime() {
     date = "";  // clear the variables
@@ -413,16 +449,6 @@ void displayDateTime() {
     u8g2.clearBuffer(); // clear the internal memory
     u8g2.setFont(u8g2_font_smart_patrol_nbp_tf); // choose a suitable font
     write_wifi(obtainedwifi);
-
-    time_t timenow = now();
-    // Then convert the UTC UNIX timestamp to local time
-
-    // Then convert the UTC UNIX timestamp to local time
-    // normal time from zon 2 march to sun 2 nov 
-    TimeChangeRule euBRU = {"BRU", Second, Sun, Mar, 2, +60};  //normal time UTC + 1 hours - change this as needed
-    TimeChangeRule euUCT = {"UCT", First, Sun, Nov, 2, 0};     //daylight saving time summer: UTC - change this as needed
-    Timezone euBrussel(euBRU, euUCT);
-    localtimenow = euBrussel.toLocal(timenow);
 
     // now format the Time variables into strings with proper names for month, day etc
     date += days[weekday(localtimenow)-1];

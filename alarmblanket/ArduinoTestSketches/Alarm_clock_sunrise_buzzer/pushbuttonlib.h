@@ -28,7 +28,7 @@ void actionBasedOnDrukknop1Press() {
   } else if (Drukknop1PressType == Drukknop1LONGPRESS) {
     //START STATEMENTS LONG PRESS
     knop_longpress_waarde = knop_longpress_waarde + 1;
-    if (knop_longpress_waarde > 2) {
+    if (knop_longpress_waarde > 3) {
       knop_longpress_waarde = 1;
     }
     //END  STATEMENTS LONG PRESS
