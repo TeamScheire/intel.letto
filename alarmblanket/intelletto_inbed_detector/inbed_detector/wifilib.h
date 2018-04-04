@@ -11,6 +11,9 @@
 #include <PubSubClient.h>
 
 bool personinbed = true;
+bool publishinbed = false;
+unsigned long starttimepublishinbed;
+const unsigned long publishinbedinterval = 5000L;
 
 unsigned long NTPUpdateInterval = 60000 ;
  
@@ -110,12 +113,12 @@ void setupWiFi(bool wait)
 
 void MQTTsubscribe2topics() {
   //write here all MQTT topics we subscribe to. Act on it in the callback!
-  MQTTclient.subscribe("intellettoMassage");
+  MQTTclient.subscribe("intellettoBedSensorInBed");
 }
 
 void MQTTpublish_reconnected() {
   //publish a message that we connected to 
-  MQTTclient.publish("intellettoStatus", "Massage reconnected to MQTTserver");
+  MQTTclient.publish("intellettoStatus", "BedSensor reconnected to MQTTserver");
 }
 
 boolean MQTTpublish(const char* topic, const char* payload) {
@@ -136,7 +139,7 @@ void MQTTreconnect() {
      Serial.print("Attempting MQTT connection...");
     }
     // Create a random client ID
-    String clientId = "ESP8266MassageClient-";
+    String clientId = "ESP8266BedSensorClient-";
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
     if (MQTTclient.connect(clientId.c_str())) {
@@ -160,9 +163,8 @@ void MQTTreconnect() {
 
 void MQTT_msg_callback(char* topic, byte* payload, unsigned int length) {
   // if a topic subscribed to in reconnect occurs, this callback is called
-  // Here we only subscribe to topic intellettoMassage which is a number to 
-  // indicate what massage to start. 
-  // We propagate this to the SLAVE Arduino controller
+  // Here we only subscribe to topic intellettoBedSensorInBed which is a request to publish
+  // if person in bed or not
   if (SERIALTESTOUTPUT) {
     Serial.print("Message arrived [");
     Serial.print(topic);
@@ -171,71 +173,9 @@ void MQTT_msg_callback(char* topic, byte* payload, unsigned int length) {
       Serial.print((char)payload[i]);
     }
     Serial.println();
+    publishinbed = true;
   }
 
-  // The intelletto alarm subscribes to the intellettoMassage topic
-  // which is a code (Neck, Breast, Tummy, Hip) + number 0 off, 1 mid, 2 strong
-
-  if ((char)payload[0] == 'O') {
-    //switch massage off
-      send2Slave(MS_NONE);
-  }
-  
-  if ((char)payload[0] == 'N') {
-    //control command. Set a massage zone
-    if ((char)payload[1] == '0') {
-      // Turn Neck Massage off  
-      send2Slave(MS_NECKOFF);
-    } else if ((char)payload[1] == '1'){
-      // Turn Neck Massage to medium
-      send2Slave(MS_NECKWEAK);
-    } else {
-      // Turn Neck Massage to high
-      send2Slave(MS_NECK);
-    }
-  }
-  
-  if ((char)payload[0] == 'B') {
-    //control command. Set a massage zone
-    if ((char)payload[1] == '0') {
-      // Turn Massage off  
-      send2Slave(MS_BREASTOFF);
-    } else if ((char)payload[1] == '1'){
-      // Turn Massage to medium
-      send2Slave(MS_BREASTWEAK);
-    } else {
-      // Turn Massage to high
-      send2Slave(MS_BREAST);
-    }
-  }
-  
-  if ((char)payload[0] == 'T') {
-    //control command. Set a massage zone
-    if ((char)payload[1] == '0') {
-      // Turn Massage off  
-      send2Slave(MS_BELLYOFF);
-    } else if ((char)payload[1] == '1'){
-      // Turn Massage to medium
-      send2Slave(MS_BELLYWEAK);
-    } else {
-      // Turn Massage to high
-      send2Slave(MS_BELLY);
-    }
-  }
-  
-  if ((char)payload[0] == 'H') {
-    //control command. Set a massage zone
-    if ((char)payload[1] == '0') {
-      // Turn Massage off  
-      send2Slave(MS_HIPOFF);
-    } else if ((char)payload[1] == '1'){
-      // Turn Massage to medium
-      send2Slave(MS_HIPWEAK);
-    } else {
-      // Turn Massage to high
-      send2Slave(MS_HIP);
-    }
-  }
 }
 
 void setupMQTTClient() {
@@ -250,6 +190,14 @@ void handleMQTTClient() {
     MQTTreconnect();
   }
   MQTTclient.loop();
+  if (publishinbed) {
+    //publish a message indicating if a person in bed or not
+    if (personinbed)
+      MQTTclient.publish("intellettoBedSensor", "1");
+    else
+      MQTTclient.publish("intellettoBedSensor", "0");
+    starttimepublishinbed = millis();
+  }
 }
 
 void obtainDateTime() {
