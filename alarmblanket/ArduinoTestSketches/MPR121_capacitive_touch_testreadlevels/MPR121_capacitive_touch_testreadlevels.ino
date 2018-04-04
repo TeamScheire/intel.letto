@@ -11,10 +11,10 @@ Variables:
  * connectedelectrodes: how many electrodes are used of the MPR121 ?
 */
 
-const bool SERIALTESTOUTPUT = false;
+const bool SERIALTESTOUTPUT = true;
 const bool SHOWonU8g2 = true;
 const int connectedelectrodes = 6; // how many touch electrodes present?
-
+const unsigned int inbed_cap = 25; // hard coded, if <= inbed_cap, then person on top of the electrode
 bool changedstate = false;
 
 // OLED display with U8g2 lib
@@ -28,9 +28,11 @@ bool changedstate = false;
 
 // MPR121 IRQ pin
 const int irqpin = A0;  // Analog pin 0
-boolean touchStates[12]; //to keep track of the previous touch states
-boolean firsttouchStates[12]; //to keep track if button was just touched
+boolean touchStates[12];         //to keep track of the previous touch states
+boolean firsttouchStates[12];    //to keep track if button was just touched
 boolean releasedtouchStates[12]; //to keep track if button was just released
+boolean personinbedStates[12];   // to keep track if a person in the bed (prolonged touch)
+// map a position from top (0) to bottom (5) to the actual pins
 int mapposition2pin[connectedelectrodes] = {4, 2, 5, 3, 1, 0};
 
 // setup the OLED display of 128x32
@@ -46,7 +48,13 @@ U8G2_SSD1306_128X32_UNIVISION_F_SW_I2C u8g2(U8G2_R0, pSCL, pSDA, U8X8_PIN_NONE);
 bool initialized = false;
 byte beat = 0;
 
+unsigned long starttime, startshowtime, interval, intervalshow;
+unsigned long startinbedtime, intervalinbed;
+
 void setup(void) {
+  interval = 1000L;
+  intervalshow = 500L;
+  intervalinbed = 1000L;
   if (SERIALTESTOUTPUT) {
     Serial.begin(115200);   // We'll send debugging information via the Serial monitor
     Serial.print("Serial startedpin! ");
@@ -65,24 +73,42 @@ void setup(void) {
     firsttouchStates[i] = 0;
     releasedtouchStates[i] = 0;
     touchStates[i] = 0;
+    personinbedStates[i] = 0;
   }
   if (SERIALTESTOUTPUT) {
     Serial.print("Ended Setup Configuration! ");
   }
   if (SHOWonU8g2) {
-    show_touch();
+    show_inbed();
   }
+  starttime = millis();
+  startshowtime = starttime;
 }
  
 void loop(void) {
   changedstate = false;
   readTouchInputs();
-  if (changedstate) {
+  //if (changedstate) {
+  //  if (SHOWonU8g2) {
+  //    show_touch();
+  //  }
+  //}
+  if ((millis() - startshowtime) > intervalshow) {
+    //update the screen
     if (SHOWonU8g2) {
-      show_touch();
+      show_inbed();
+    }
+    startshowtime = millis();
+  }
+  
+  if (SERIALTESTOUTPUT) {
+    if ((millis() - starttime) > interval) {
+      show_debugdata();
+      starttime = millis();
+      //delay(500);
     }
   }
-  delay(500);
+  delay(100);
 }
 
 
@@ -111,11 +137,25 @@ void show_touch() {
   u8g2.clearBuffer(); // clear the internal memory
   u8g2.setFont(u8g2_font_smart_patrol_nbp_tf); // choose a suitable font
   u8g2.drawStr(0,10,"Parts touched:");  // write something to the internal memory
-  //u8g2.setCursor(0, 32);
-  //u8g2.print(ADC);
   int xpos = 10;
   for (int i=0; i<connectedelectrodes; i++) {
     if (touchStates[mapposition2pin[i]] == 0) {
+      u8g2.drawStr(xpos, 25, "0");
+    } else {
+      u8g2.drawStr(xpos, 25, "1");
+    }
+    xpos += 15;
+  }
+  u8g2.sendBuffer();          // transfer internal memory to the display
+}
+
+void show_inbed() {
+  u8g2.clearBuffer(); // clear the internal memory
+  u8g2.setFont(u8g2_font_smart_patrol_nbp_tf); // choose a suitable font
+  u8g2.drawStr(0,10,"Person in bed:");  // write something to the internal memory
+  int xpos = 10;
+  for (int i=0; i<connectedelectrodes; i++) {
+    if (personinbedStates[mapposition2pin[i]] == 0) {
       u8g2.drawStr(xpos, 25, "0");
     } else {
       u8g2.drawStr(xpos, 25, "1");
@@ -139,9 +179,7 @@ void readTouchInputs(){
     
     uint16_t touched = ((MSB << 8) | LSB); //16bits that make up the touch states
 
-    
     for (int i=0; i < 12; i++){  // Check what electrodes were pressed
-      
       firsttouchStates[i] = 0;
       releasedtouchStates[i] = 0;
       if(touched & (1<<i)){
@@ -172,8 +210,34 @@ void readTouchInputs(){
       }
     }
   }
+  // we also determine in bed state based on a fixed cutoff
+  if ((millis() - startinbedtime) > intervalinbed) {
+    //update the inbed states
+    for (uint8_t i=0; i<connectedelectrodes; i++) {
+      if (filteredData(i) <= inbed_cap || baselineData(i) <= inbed_cap) {
+        personinbedStates[i] = true; 
+      } else {
+        personinbedStates[i] = false; 
+      }
+    }
+    startinbedtime = millis();
+  }
 }
 
+void show_debugdata() {
+  Serial.print("\t\t\t\t\t\t\t\t\t\t\t\t\t 0x"); Serial.println(touched(), HEX);
+
+  Serial.print("Filt: ");
+  for (uint8_t i=0; i<12; i++) {
+    Serial.print(filteredData(i)); Serial.print("\t");
+  }
+  Serial.println();
+  Serial.print("Base: ");
+  for (uint8_t i=0; i<12; i++) {
+    Serial.print(baselineData(i)); Serial.print("\t");
+  }
+  Serial.println();
+}
 
 /* 
  *  Setup of the MPR121 sensor, setting operation and thresholds.
@@ -264,6 +328,62 @@ void set_register(int address, unsigned char r, unsigned char v){
     Wire.beginTransmission(address);
     Wire.write(r);
     Wire.write(v);
+    Wire.endTransmission();
+}
+
+/*********************************************************************/
+/* ADAFRUIT LIB METHODS */
+/*********************************************************************/
+void setThresholds(uint8_t touch, uint8_t release) {
+  for (uint8_t i=0; i<12; i++) {
+    writeRegister(MPR121_TOUCHTH_0 + 2*i, touch);
+    writeRegister(MPR121_RELEASETH_0 + 2*i, release);
+  }
+}
+
+uint16_t  filteredData(uint8_t t) {
+  if (t > 12) return 0;
+  return readRegister16(MPR121_FILTDATA_0L + t*2);
+}
+
+uint16_t  baselineData(uint8_t t) {
+  if (t > 12) return 0;
+  uint16_t bl = readRegister8(MPR121_BASELINE_0 + t);
+  return (bl << 2);
+}
+
+uint16_t  touched(void) {
+  uint16_t t = readRegister16(MPR121_TOUCHSTATUS_L);
+  return t & 0x0FFF;
+}
+
+uint8_t readRegister8(uint8_t reg) {
+    Wire.beginTransmission(MPR121_I2CADDR_DEFAULT);
+    Wire.write(reg);
+    Wire.endTransmission(false);
+    while (Wire.requestFrom(MPR121_I2CADDR_DEFAULT, 1) != 1);
+    return ( Wire.read());
+}
+
+uint16_t readRegister16(uint8_t reg) {
+    Wire.beginTransmission(MPR121_I2CADDR_DEFAULT);
+    Wire.write(reg);
+    Wire.endTransmission(false);
+    while (Wire.requestFrom(MPR121_I2CADDR_DEFAULT, 2) != 2);
+    uint16_t v = Wire.read();
+    v |=  ((uint16_t) Wire.read()) << 8;
+    return v;
+}
+
+/**************************************************************************/
+/*!
+    @brief  Writes 8-bits to the specified destination register
+*/
+/**************************************************************************/
+void writeRegister(uint8_t reg, uint8_t value) {
+    Wire.beginTransmission(MPR121_I2CADDR_DEFAULT);
+    Wire.write((uint8_t)reg);
+    Wire.write((uint8_t)(value));
     Wire.endTransmission();
 }
 
