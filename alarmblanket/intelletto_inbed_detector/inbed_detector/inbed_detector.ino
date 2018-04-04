@@ -140,19 +140,14 @@ void loop(void) {
   }
 
   if ((currenttime - startshowtime) > intervalshow) {
-    //update the screen
-    if (SHOWonU8g2) {
-      show_inbed();
-    }
+    //determine if in bed and update the screen
+    show_inbed();
     startshowtime = currenttime;
   }
   
-  if (SERIALTESTOUTPUT) {
-    if ((currenttime - starttime) > interval) {
-      show_debugdata();
-      starttime = currenttime;
-      //delay(500);
-    }
+  if ((currenttime - starttime) > interval) {
+    show_debugdata();
+    starttime = currenttime;
   }
   
   //handle MQTT messages
@@ -208,20 +203,30 @@ void show_touch() {
 }
 
 void show_inbed() {
-  u8g2.clearBuffer(); // clear the internal memory
-  u8g2.setFont(u8g2_font_smart_patrol_nbp_tf); // choose a suitable font
-  u8g2.drawStr(0,10,"Person in bed:");  // write something to the internal memory
+  personinbed = false;
+  if (SHOWonU8g2) {
+    u8g2.clearBuffer(); // clear the internal memory
+    u8g2.setFont(u8g2_font_smart_patrol_nbp_tf); // choose a suitable font
+    u8g2.drawStr(0,10,"Person in bed:");  // write something to the internal memory
+  }
   int xpos = 10;
   for (int i=0; i<connectedelectrodes; i++) {
     if (personinbedStates[mapposition2pin[i]] == 0) {
-      u8g2.drawStr(xpos, 25, "0");
+      if (SHOWonU8g2) {
+        u8g2.drawStr(xpos, 25, "0");
+      }
     } else {
-      u8g2.drawStr(xpos, 25, "1");
+      if (SHOWonU8g2) {
+        u8g2.drawStr(xpos, 25, "1");
+      }
+      personinbed = true;
     }
     xpos += 15;
   }
-  write_wifi(obtainedwifi);
-  u8g2.sendBuffer();          // transfer internal memory to the display
+  if (SHOWonU8g2) {
+    write_wifi(obtainedwifi);
+    u8g2.sendBuffer();          // transfer internal memory to the display
+  }
 }
 
 /*

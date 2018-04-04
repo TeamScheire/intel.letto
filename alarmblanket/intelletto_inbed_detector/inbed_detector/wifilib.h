@@ -10,7 +10,7 @@
 //MQTT library
 #include <PubSubClient.h>
 
-bool personinbed = true;
+bool personinbed = false;
 bool publishinbed = false;
 unsigned long starttimepublishinbed;
 const unsigned long publishinbedinterval = 5000L;
@@ -197,6 +197,7 @@ void handleMQTTClient() {
     else
       MQTTclient.publish("intellettoBedSensor", "0");
     starttimepublishinbed = millis();
+    publishinbed = false;
   }
 }
 
