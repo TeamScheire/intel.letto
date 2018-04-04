@@ -76,7 +76,7 @@ int pSCL = D1;
 #include "wakescenario.h"
 
 // variables
-
+alarmstatus alarm_status = ALARM_OFF;
 bool alarm_sunrise_on = false;
 bool alarm_over_midnight = false;
 
@@ -231,7 +231,7 @@ void loop() {
   /** END DETERMINE ALARM OR NOT */
 
   /** TWO POSSIBLE STATES: ALARM MODE OR NORMAL MODE */
-  if (! alarm_sunrise_set || ! alarm_sunrise_on ) {
+  if (! alarm_sunrise_set || (alarm_status == ALARM_OFF ) ) {
     /* NORMAL MODE */ 
 
     //display in normal mode
@@ -240,7 +240,7 @@ void loop() {
       // we show date and time 
       displayDateTime();
     } else if (knop_longpress_waarde == 2) {
-      // we show date and time 
+      // we show alarm time 
       displayAlarm();
     } else {
       // no display
@@ -312,8 +312,9 @@ void loop() {
     determine_wake_scenario(sec_from_alarm, millis_from_alarm, beepstrength);
     
     // buzzer part We query wake scenario and operate buzzer
-    if (buzzer2sound == BUZZ_OFF) {
+    if (personinbed == false || buzzer2sound == BUZZ_OFF) {
       analogWrite(buzzer, 0);
+      buzzer2sound = BUZZ_OFF;
     } else if (Drukknop1PressType == Drukknop1SHORTPRESS && sec_from_alarm > 0) {
       // on press while in alarm mode after alarm mode, we snooze buzzer
       snoozetimeon = true;
@@ -330,6 +331,21 @@ void loop() {
     } else if (buzzer2sound == BUZZ_SOS) {
       SOS();
     }
+    
+    // ALARM is ON, we can switch OFF alarm mode with two long presses while NOT in bed
+    if (personinbed) {
+      knop_waarde = 1;
+      knop_longpress_waarde = 1;
+    } else {
+      if (knop_longpress_waarde == 2) {
+        alarm_status = ALARM_OFF;
+        ventilator = VENT_OFF;
+        ventchanged = true;
+        wakelight = LIGHT_OFF;
+        wakelightchanged = true;
+        buzzer2sound = BUZZ_OFF;
+      }
+    }
 
   }
   
@@ -340,7 +356,7 @@ void loop() {
       setupWiFi(false);
   }
 
-  //we publish MQTT messages as needed, and repeat them every 60 sec
+  //we publish MQTT messages as needed, and repeat them every xx sec
   if (ventchanged || huidigeTijd - mqttventmsgtime > mqttmsginterval) {
     // send message to ventilator with the required setting:
     if (ventilator == VENT_ON) {
@@ -407,17 +423,28 @@ void determine_alarm_time() {
     }
 
   }
-  if (old_alarm_sunrise_on != alarm_sunrise_on) {
-    // alarm has started for the first time, or stopped! 
+  if (!old_alarm_sunrise_on && (old_alarm_sunrise_on != alarm_sunrise_on)) {
+    // alarm has started for the first time! 
     // reset buttons 
     knop_waarde = 1;
     knop_longpress_waarde = 1;
+    alarm_status = PRE_ALARM;
   }
   
   //before the alarm time eg 7:39 with alarm at 7:40 gives -1 minute
   //after the alarm time eg 7:41 with alarm at 7:40 gives +1 minute
   sec_from_alarm = sec_from_alarm * 60 + cursec;  // convert min to sec
   millis_from_alarm = sec_from_alarm * 1000 + curmillis;
+
+  if (sec_from_alarm > 0) {
+    if (alarm_status != ALARM_ON) {
+      // the real alarm started
+      alarm_status = ALARM_ON;
+      next_vent_change = random(30, 61);
+      ventilator = VENT_ON;
+      ventchanged = true;
+    }
+  }
   
   if (SERIALTESTOUTPUT) {
     Serial.println("Computed alarm values");
@@ -552,7 +579,7 @@ void displayDateTime() {
 }
 
 void sunrise_color() {
-  if (alarm_sunrise_on) {
+  if (alarm_status != ALARM_OFF) {
     if (sec_from_alarm > 0) {
       if (dageraad1on) {
         // you should be awake, full light
@@ -583,8 +610,8 @@ void sunrise_color() {
       }
     }
     
-    if (sec_from_alarm > 0) {
-      // we fade in and out 
+    if (sec_from_alarm > 15*60) {
+      // we fade in and out after 15 min of full light for safety
       myNeo_PixelStrook.ActivePattern = FADE;
       myNeo_PixelStrook.Interval = 20; // shorter is faster
       myNeo_PixelStrook.TotalSteps = 100; //steps in the fade in to out. 

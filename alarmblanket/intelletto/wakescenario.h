@@ -1,4 +1,6 @@
 
+// Alarm zones
+enum alarmstatus { ALARM_OFF, PRE_ALARM, ALARM_ON};
 
 // Buzzer sounds supported:
 enum  buzzersound { BUZZ_OFF, BUZZ_BEEP, BUZZ_BEEPGALLOP, BUZZ_DASH, BUZZ_DOT, BUZZ_SOS };
@@ -14,6 +16,7 @@ bool snoozetimeon = false;
 unsigned long snoozetimestart;
 unsigned long snoozetimeduration = 10 * 60 * 1000L; // 10 min
 
+unsigned long next_vent_change = 30;
 ventstate ventilator = VENT_FREE;
 bool ventchanged = false;
 unsigned long mqttventmsgtime = 0;
@@ -21,7 +24,7 @@ lightstate wakelight = LIGHT_FREE;
 bool wakelightchanged = false;
 unsigned long mqttwakelightmsgtime = 0;
 // repeat mqtt messages for safety every xx millisec
-unsigned long mqttmsginterval = 40000L;
+unsigned long mqttmsginterval = 5000L;
 
 void determine_wake_scenario(long sec_alarm, long millis_alarm, int& beepstrength) {
   /* FIRST WE DETERMINE BUZZER WAKE SCENARIO
@@ -60,29 +63,42 @@ void determine_wake_scenario(long sec_alarm, long millis_alarm, int& beepstrengt
    *  
    */
   if (sec_alarm > 0) {
-    // we switch ventilator on for 60 sec, then off for 20.
-    if (sec_alarm % 80 < 60) {
-      // ventilator ON
+    // we randomly switch off and on ventilator for periods of 30 to 60 sec
+    if (sec_alarm > next_vent_change) {
+      // change ventilator status 
+      if (ventilator != VENT_ON) {
+        ventilator = VENT_ON;
+        ventchanged = true;
+      } else {
+        ventilator = VENT_OFF;
+        ventchanged = true;
+      }
+      // set a new time to change ventilator
+      next_vent_change += random(30, 60);
+    }
+  }
+  // 1 min before alarm we set ventilator on  
+  else if (sec_alarm > -1 * 60) {
+    // we switch ventilator on 
+    if (ventilator != VENT_ON) {
+      ventilator = VENT_ON;
+      ventchanged = true;
+    }
+  }
+  // 5 min before alarm we alternate between on and off every 30 sec
+  else if (sec_alarm > -5 * 60) {
+    if (sec_alarm % 60 < 30) {
       if (ventilator != VENT_ON) {
         ventilator = VENT_ON;
         ventchanged = true;
       }
     } else {
-      // ventilator OFF
       if (ventilator != VENT_OFF) {
         ventilator = VENT_OFF;
         ventchanged = true;
       }
     }
   }
-  // 4 min before alarm we set ventilator on  
-  else if (sec_alarm > -4 * 60) {
-    // we switch ventilator on 
-    if (ventilator != VENT_ON) {
-      ventilator = VENT_ON;
-      ventchanged = true;
-    }
-  } 
   else {
     // we are in alarm mode, but not yet time of alarm.
     // now: ventilation off!
@@ -92,7 +108,6 @@ void determine_wake_scenario(long sec_alarm, long millis_alarm, int& beepstrengt
     }
   }
 
-  
   /* WE DETERMINE WAKELIGHT WAKE SCENARIO
    *  
    */
@@ -111,5 +126,16 @@ void determine_wake_scenario(long sec_alarm, long millis_alarm, int& beepstrengt
       wakelightchanged = true;
     }
   }
+  
+  /* WE DETERMINE MASSAGE WAKE SCENARIO
+   *  
+   */
+  // TODO
+
+  /* WE DETERMINE SPEACH WAKE SCENARIO
+   *  
+   */
+  // TODO
+  
 }
 

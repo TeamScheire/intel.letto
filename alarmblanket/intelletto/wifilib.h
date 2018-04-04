@@ -1,4 +1,4 @@
- 
+
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 
@@ -111,6 +111,7 @@ void setupWiFi(bool wait)
 void MQTTsubscribe2topics() {
   //write here all MQTT topics we subscribe to. Act on it in the callback!
   MQTTclient.subscribe("intelletto");
+  MQTTclient.subscribe("intellettoBedSensor");
 }
 
 void MQTTpublish_reconnected() {
@@ -170,32 +171,31 @@ void MQTT_msg_callback(char* topic, byte* payload, unsigned int length) {
     Serial.println();
   }
 
-  // The intelletto alarm subscribes to the intelletto topic
-  // Messages arrive from:
-  // 1. person in or out of bed: b0 or b1
-  // 2. optionnally DHT22 ?? 
-  // 3. Switch on the LED control command received. 
-  //    if a 1 was received as first character
-
-  if ((char)payload[0] == 'c') {
-    //control command. Set LED on or off
-    if ((char)payload[1] == '1') {
-      // Turn the LED on (Note that LOW is the voltage level
-      // but actually the LED is on; this is because it is acive low on the ESP-01)
-      digitalWrite(BUILTIN_LED, LOW);  
-    } else {
-      // Turn the LED off by making the voltage HIGH
-      digitalWrite(BUILTIN_LED, HIGH);  
-    }
-  }
-  if ((char)payload[0] == 'b') {
+  if (topic == "intellettoBedSensor") { 
     //message from the bed sensor. 
-    if ((char)payload[1] == '1') {
+    if ((char)payload[0] == '1') {
       // Person is in the BED
       personinbed = true;  
     } else {
       // Person is out of the BED
       personinbed = false;  
+    }
+  } else if (topic == "intelletto") {
+    // The intelletto alarm subscribes to the intelletto topic
+    // Messages arrive from:
+    // 1. Switch on the LED control command received. 
+    //    if a 1 was received as first character
+  
+    if ((char)payload[0] == 'c') {
+      //control command. Set LED on or off
+      if ((char)payload[1] == '1') {
+        // Turn the LED on (Note that LOW is the voltage level
+        // but actually the LED is on; this is because it is acive low on the ESP-01)
+        digitalWrite(BUILTIN_LED, LOW);  
+      } else {
+        // Turn the LED off by making the voltage HIGH
+        digitalWrite(BUILTIN_LED, HIGH);  
+      }
     }
   }
 }
