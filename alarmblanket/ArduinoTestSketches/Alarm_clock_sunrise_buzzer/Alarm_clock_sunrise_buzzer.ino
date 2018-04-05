@@ -14,8 +14,8 @@
 
 /*  START USER SETTABLE OPTIONS */
 // alarm
-uint8_t alarm_hour = 6;
-uint8_t alarm_min = 50;
+uint8_t alarm_hour = 8;
+uint8_t alarm_min = 30;
 bool alarm_sunrise_set = true;  // do alarm or not
 uint8_t sunrise_start_min_before = 20;  // minutes to start sunrise before alarm time (max 59)
 uint8_t beep_start_min_before = 5;

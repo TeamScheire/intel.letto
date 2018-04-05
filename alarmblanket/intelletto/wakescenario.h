@@ -23,6 +23,12 @@ unsigned long mqttventmsgtime = 0;
 lightstate wakelight = LIGHT_FREE;
 bool wakelightchanged = false;
 unsigned long mqttwakelightmsgtime = 0;
+unsigned long next_massage_change = 20;
+int nrmassagestates = 5;
+static const char* const massagestates[] = {"O", "N", "B", "T", "H"};
+const char* newmassagestate;
+bool massagechanged = false;
+unsigned long mqttmassagemsgtime = 0;
 // repeat mqtt messages for safety every xx millisec
 unsigned long mqttmsginterval = 5000L;
 
@@ -130,7 +136,57 @@ void determine_wake_scenario(long sec_alarm, long millis_alarm, int& beepstrengt
   /* WE DETERMINE MASSAGE WAKE SCENARIO
    *  
    */
-  // TODO
+  if (sec_alarm > 0) {
+    // we randomly switch off and on massage motors for periods of 10 to 20 sec
+    if (sec_alarm > next_massage_change) {
+      // change massage status
+      massagechanged = true;
+      // select a new state
+      int newstate = random(0, nrmassagestates);
+      char buf[2];
+      strcpy(buf, massagestates[newstate]);
+      int intensity = random(0,3);
+      const char *zero = "0";
+      const char *one = "1";
+      const char *two = "2";
+      if (intensity == 0) {
+        //switch off
+        strcat(buf, zero);
+      } else if (intensity == 1) {
+        strcat(buf, one);
+      } else {
+        strcat(buf, two);
+      }
+      newmassagestate = buf;
+      
+      // set a new time to change ventilator
+      next_massage_change += random(10, 21);
+    } else if (sec_alarm > -15 * 60 && sec_alarm < -14 * 60) {
+      //all motors on 
+      if (newmassagestate[0] != 'A') {
+        newmassagestate = "A1";
+        massagechanged = true;
+      }
+    } else if (sec_alarm > -10 * 60 && sec_alarm < -8 * 60) {
+      // execute program 1 
+      if (newmassagestate[0] != 'P') {
+        newmassagestate = "P1";
+        massagechanged = true;
+      }
+    } else if (sec_alarm > -4 * 60 && sec_alarm < -2 * 60) {
+      // execute program 1 
+      if (newmassagestate[0] != 'P') {
+        newmassagestate = "P1";
+        massagechanged = true;
+      }
+    } else {
+      //no massage
+      if (newmassagestate[0] != 'O') {
+        newmassagestate = "O0";
+        massagechanged = true;
+      }
+    }
+  }
 
   /* WE DETERMINE SPEACH WAKE SCENARIO
    *  

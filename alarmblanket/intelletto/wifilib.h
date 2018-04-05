@@ -172,7 +172,7 @@ void MQTT_msg_callback(char* topic, byte* payload, unsigned int length) {
     Serial.println();
   }
 
-  if (strcmp(topic, "intellettoBedSensor")==0) {
+  if (strcmp(topic, "intellettoBedSensor") == 0) {
     //message from the bed sensor. 
     if ((char)payload[0] == '1') {
       // Person is in the BED

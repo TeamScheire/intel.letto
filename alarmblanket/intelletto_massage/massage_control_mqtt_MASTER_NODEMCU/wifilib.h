@@ -21,6 +21,10 @@ unsigned long huidigeTijd;
 unsigned long wifireconnectTime = 0;
 unsigned long mqttreconnectTime = 0;
 
+// 0: no program; 1: program 1
+int current_program = 0;
+unsigned long start_program_time;
+
 IPAddress ip;
 bool obtainedwifi = false;
 
@@ -111,6 +115,10 @@ void setupWiFi(bool wait)
 void MQTTsubscribe2topics() {
   //write here all MQTT topics we subscribe to. Act on it in the callback!
   MQTTclient.subscribe("intellettoMassage");
+    if (SERIALTESTOUTPUT) {
+      Serial.print("subscribed to ");
+      Serial.println("intellettoMassage");
+    }
 }
 
 void MQTTpublish_reconnected() {
@@ -179,9 +187,11 @@ void MQTT_msg_callback(char* topic, byte* payload, unsigned int length) {
   if ((char)payload[0] == 'O') {
     //switch massage off
       send2Slave(MS_NONE);
+      current_program = 0;
   }
   
-  if ((char)payload[0] == 'N') {
+  if ((char)payload[0] == 'N' || (char)payload[0] == 'A') {
+    current_program = 0;
     //control command. Set a massage zone
     if ((char)payload[1] == '0') {
       // Turn Neck Massage off  
@@ -195,7 +205,8 @@ void MQTT_msg_callback(char* topic, byte* payload, unsigned int length) {
     }
   }
   
-  if ((char)payload[0] == 'B') {
+  if ((char)payload[0] == 'B' || (char)payload[0] == 'A') {
+    current_program = 0;
     //control command. Set a massage zone
     if ((char)payload[1] == '0') {
       // Turn Massage off  
@@ -209,7 +220,8 @@ void MQTT_msg_callback(char* topic, byte* payload, unsigned int length) {
     }
   }
   
-  if ((char)payload[0] == 'T') {
+  if ((char)payload[0] == 'T' || (char)payload[0] == 'A') {
+    current_program = 0;
     //control command. Set a massage zone
     if ((char)payload[1] == '0') {
       // Turn Massage off  
@@ -223,7 +235,8 @@ void MQTT_msg_callback(char* topic, byte* payload, unsigned int length) {
     }
   }
   
-  if ((char)payload[0] == 'H') {
+  if ((char)payload[0] == 'H' || (char)payload[0] == 'A') {
+    current_program = 0;
     //control command. Set a massage zone
     if ((char)payload[1] == '0') {
       // Turn Massage off  
@@ -235,6 +248,18 @@ void MQTT_msg_callback(char* topic, byte* payload, unsigned int length) {
       // Turn Massage to high
       send2Slave(MS_HIP);
     }
+  }
+  
+  if ((char)payload[0] == 'P') {
+    if ((char)payload[1] == '1') {
+      // request to start program 1
+      if (current_program != 1) {
+        //program needs to start:
+        start_program_time = millis();
+        current_program = 1;
+      }
+    }
+    // else : unknown program, we do nothing ...
   }
 }
 

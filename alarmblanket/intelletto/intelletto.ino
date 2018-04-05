@@ -15,11 +15,11 @@
 
 /*  START USER SETTABLE OPTIONS */
 #define SERIALTESTOUTPUT false  // debug info
-#define TEST_ALARM true         // to test, start alarm on switch on
+#define TEST_ALARM false         // to test, start alarm on switch on
 
 // alarm
 uint8_t alarm_hour = 7;
-uint8_t alarm_min = 45;
+uint8_t alarm_min = 55;
 bool alarm_set = true;  // do alarm or not
 uint8_t sunrise_start_min_before = 15;  // minutes to start alarm (=sunrise) before alarm time (max 59)
 uint8_t alarm_stop_min_after = 120;  // minutes to stop alarm after alarm time (max 120)
@@ -176,7 +176,9 @@ void setup() {
   }
   //set randomseed
   randomSeed(micros());
-  
+
+  //initialize variables
+  newmassagestate = "O";
   // connect to NTP 
   timeClient.begin();   // Start the NTP UDP client
   // mqtt client start
@@ -248,8 +250,11 @@ void loop() {
   }
   /** END DETERMINE ALARM OR NOT */
 
-  /** TWO POSSIBLE STATES: ALARM MODE OR NORMAL MODE */
-  if ((alarm_status == ALARM_OFF ) || (alarm_status == ALARM_SWITCHED_OFF)) {
+  /** TWO POSSIBLE STATES: ALARM MODE OR NORMAL MODE 
+   *  Also if programming we remain in normal mode
+   */
+  if ((alarm_status == ALARM_OFF ) || (alarm_status == ALARM_SWITCHED_OFF) || Drukknop1_PROGMODE_H ||
+       Drukknop1_PROGMODE_M) {
     /* NORMAL MODE */ 
     do_normal_mode();
   } else {
@@ -285,6 +290,12 @@ void loop() {
     wakelightchanged = false;
     mqttwakelightmsgtime = huidigeTijd;
   }
+  if (massagechanged || huidigeTijd - mqttmassagemsgtime > mqttmsginterval) {
+    // send message to massage with the required new setting:
+    MQTTpublish("intellettoMassage", newmassagestate);
+    massagechanged = false;
+    mqttmassagemsgtime = huidigeTijd;
+  }
   
   if (SERIALTESTOUTPUT) {
     delay(500);
@@ -319,6 +330,10 @@ void do_normal_mode() {
       wakelight = LIGHT_FREE;
       wakelightchanged = true;
     }
+  }
+  if (newmassagestate[0] != 'O') {
+    newmassagestate = "O0";
+    massagechanged = true;
   }
   
   //display in normal mode; We can be in program modes, or in different display states.
@@ -555,6 +570,13 @@ void display_plugs(){
     u8g2.drawStr(6,32,"L");
   } else if (ventilator == LIGHT_OFF){
     u8g2.drawStr(6,32,"-");
+  }
+  if (alarm_status == ALARM_ON || alarm_status == PRE_ALARM) {
+    if (newmassagestate[0] == 'O') {
+      u8g2.drawStr(11,32,"-");
+    } else {
+      u8g2.drawStr(6,32,"M");
+    }
   }
 }
 

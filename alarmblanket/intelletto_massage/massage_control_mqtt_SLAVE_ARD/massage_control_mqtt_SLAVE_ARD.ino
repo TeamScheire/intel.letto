@@ -59,6 +59,7 @@ void MotorsOff() {
 void Off() {
   MotorsOff();
 }
+
 void setup() {
   pinMode(NeckMotorsSTRONG, OUTPUT);   // sets the pin as output
   pinMode(BreastMotorsSTRONG, OUTPUT);   // sets the pin as output
@@ -129,50 +130,57 @@ void handleMassageScenario() {
   // there is one of the scenario's, we execute on it.
   if (massagescenario == MS_NECK) {
     if (massagechanged) {
-      MotorsOff();
+      //MotorsOff();
       //switch on NECK motor
+      digitalWrite(NeckMotorsWEAK, LOW);
       digitalWrite(NeckMotorsSTRONG, HIGH);
       massagechanged = false;
     }
   } else if (massagescenario == MS_NECKWEAK) {
     if (massagechanged) {
-      MotorsOff();
+      //MotorsOff();
       //switch on NECK motor
+      digitalWrite(NeckMotorsSTRONG, LOW);
       digitalWrite(NeckMotorsWEAK, HIGH);
       massagechanged = false;
     }
   } else if (massagescenario == MS_BREAST) {
     if (massagechanged) {
-      MotorsOff();
+      //MotorsOff();
       //switch on motor
+      digitalWrite(BreastMotorsWEAK, LOW);
       digitalWrite(BreastMotorsSTRONG, HIGH);
       massagechanged = false;
     }
   } else if (massagescenario == MS_BREASTWEAK) {
     if (massagechanged) {
-      MotorsOff();
+      //MotorsOff();
       //switch on motor
+      digitalWrite(BreastMotorsSTRONG, LOW);
       digitalWrite(BreastMotorsWEAK, HIGH);
       massagechanged = false;
     }
   } else if (massagescenario == MS_BELLY) {
     if (massagechanged) {
-      MotorsOff();
+      //MotorsOff();
       //switch on motor
+      digitalWrite(BellyMotorsWEAK, LOW);
       digitalWrite(BellyMotorsSTRONG, HIGH);
       massagechanged = false;
     }
   } else if (massagescenario == MS_BELLYWEAK) {
     if (massagechanged) {
-      MotorsOff();
+      //MotorsOff();
       //switch on motor
+      digitalWrite(BellyMotorsSTRONG, LOW);
       digitalWrite(BellyMotorsWEAK, HIGH);
       massagechanged = false;
     }
   } else if (massagescenario == MS_HIP) {
     if (massagechanged) {
-      MotorsOff();
+      //MotorsOff();
       //switch on motor
+      digitalWrite(HipMotorsWEAK, LOW);
       digitalWrite(HipMotorsSTRONG, HIGH);
       massagechanged = false;
     }
@@ -180,6 +188,7 @@ void handleMassageScenario() {
     if (massagechanged) {
       MotorsOff();
       //switch on motor
+      //digitalWrite(HipMotorsSTRONG, LOW);
       digitalWrite(HipMotorsWEAK, HIGH);
       massagechanged = false;
     }

@@ -22,7 +22,7 @@ const char* mqtt_server = "192.168.0.111";
 
 /*  END USER SETTABLE OPTIONS */
 
-// I2C on D2 = SDA and D1 =SCL 
+// I2C on D2 = SDA and D3 =SCL 
 int pSDA = D2;
 int pSCL = D3;
 
@@ -42,7 +42,7 @@ MASSAGE massagescenario = MS_NONE;
 #include <Wire.h>
 
 // debug info
-#define SERIALTESTOUTPUT false
+#define SERIALTESTOUTPUT true
 
 void send2Slave(int msg) {
   Wire.beginTransmission(SLAVE_ADDRESS); // transmit to device SLAVE_ADDRESS
@@ -54,6 +54,10 @@ void send2Slave(int msg) {
 #include "wifilib.h"
 
 void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(1000);
+  digitalWrite(LED_BUILTIN, LOW);
   // put your setup code here, to run once:
   if (SERIALTESTOUTPUT) Serial.begin(115200); // most ESP-01's use 115200 but this could vary
 
@@ -83,6 +87,7 @@ void setup() {
     Serial.println("");
   }
   obtainedwifi = true;
+  digitalWrite(LED_BUILTIN, HIGH);
   delay(1000);
 }
 
@@ -98,8 +103,40 @@ void loop() {
   }
   
   if (SERIALTESTOUTPUT) {
-    delay(500);
-  } 
+    //delay(200);
+  }
+
+  //if a program needs to run, we now handle it
+  if (current_program == 1) {
+    run_program_1();
+  }
+}
+
+void run_program_1() {
+  // program of 4 blocks, 10 sec hip, 10 sec tummy, 10 sec breast, 10 sec neck
+  unsigned long current_time = millis();
+  unsigned long current_block = (current_time - start_program_time) % 40;
+  if (current_block < 10) {
+    send2Slave(MS_HIPWEAK);
+    send2Slave(MS_BELLYOFF);
+    send2Slave(MS_BREASTOFF);
+    send2Slave(MS_NECKOFF);
+  } else if (current_block < 20) {
+    send2Slave(MS_HIPOFF);
+    send2Slave(MS_BELLYWEAK);
+    send2Slave(MS_BREASTOFF);
+    send2Slave(MS_NECKOFF);
+  } else if (current_block < 20) {
+    send2Slave(MS_HIPOFF);
+    send2Slave(MS_BELLYOFF);
+    send2Slave(MS_BREASTWEAK);
+    send2Slave(MS_NECKOFF);
+  } else {
+    send2Slave(MS_HIPOFF);
+    send2Slave(MS_BELLYOFF);
+    send2Slave(MS_BREASTOFF);
+    send2Slave(MS_NECKWEAK);
+  }
 }
 
 
