@@ -1,6 +1,10 @@
 
 /** START Pushbutton setup code
  */
+boolean Drukknop1_PROGMODE_H = false;
+boolean Drukknop1_PROGMODE_H_1MORE = false;
+boolean Drukknop1_PROGMODE_M = false;
+boolean Drukknop1_PROGMODE_M_1MORE = false;
 boolean Drukknop1_PRESSED = LOW;
 
 
@@ -20,16 +24,39 @@ int knop_waarde, knop_longpress_waarde;
 void actionBasedOnDrukknop1Press() {
   if (Drukknop1PressType == Drukknop1SHORTPRESS) {
     //START STATEMENTS SHORT PRESS
-    knop_waarde = knop_waarde + 1;
-    if (knop_waarde > 6) {
-      knop_waarde = 1;
+    // in program mode, short presses are added to set timer
+    if (Drukknop1_PROGMODE_H) {
+      // set hour of alarm
+      Drukknop1_PROGMODE_H_1MORE = true;
+    } else if (Drukknop1_PROGMODE_M) {
+      // set min of alarm
+      Drukknop1_PROGMODE_M_1MORE = true;
+    } else {
+      // if in alarm mode, short press puts in programm mode
+      if (knop_longpress_waarde == 2) {
+        Drukknop1_PROGMODE_H = true;
+      } else {
+        knop_waarde = knop_waarde + 1;
+        if (knop_waarde > 6) {
+          knop_waarde = 1;
+        }
+        //END  STATEMENTS SHORT PRESS
+      }
     }
-    //END  STATEMENTS SHORT PRESS
   } else if (Drukknop1PressType == Drukknop1LONGPRESS) {
     //START STATEMENTS LONG PRESS
-    knop_longpress_waarde = knop_longpress_waarde + 1;
-    if (knop_longpress_waarde > 3) {
-      knop_longpress_waarde = 1;
+    // if in prog mode, long press stops prog mode
+    if (Drukknop1_PROGMODE_H) {
+      Drukknop1_PROGMODE_H = false;
+      Drukknop1_PROGMODE_M = true;
+    } else if (Drukknop1_PROGMODE_M) {
+      Drukknop1_PROGMODE_H = false;
+      Drukknop1_PROGMODE_M = false;
+    } else {
+      knop_longpress_waarde = knop_longpress_waarde + 1;
+      if (knop_longpress_waarde > 3) {
+        knop_longpress_waarde = 1;
+      }
     }
     //END  STATEMENTS LONG PRESS
   } else if (!Drukknop1longPressActive && digitalRead(Drukknop1) == Drukknop1_PRESSED) {

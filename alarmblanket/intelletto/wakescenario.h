@@ -1,6 +1,6 @@
 
 // Alarm zones
-enum alarmstatus { ALARM_OFF, PRE_ALARM, ALARM_ON};
+enum alarmstatus { ALARM_OFF, PRE_ALARM, ALARM_ON, ALARM_SWITCHED_OFF};
 
 // Buzzer sounds supported:
 enum  buzzersound { BUZZ_OFF, BUZZ_BEEP, BUZZ_BEEPGALLOP, BUZZ_DASH, BUZZ_DOT, BUZZ_SOS };
@@ -87,7 +87,7 @@ void determine_wake_scenario(long sec_alarm, long millis_alarm, int& beepstrengt
   }
   // 5 min before alarm we alternate between on and off every 30 sec
   else if (sec_alarm > -5 * 60) {
-    if (sec_alarm % 60 < 30) {
+    if ((-sec_alarm) % 60 < 30) {
       if (ventilator != VENT_ON) {
         ventilator = VENT_ON;
         ventchanged = true;

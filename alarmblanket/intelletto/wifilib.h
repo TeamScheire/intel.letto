@@ -20,6 +20,7 @@ time_t utc, localtimenow;
 unsigned long huidigeTijd;
 unsigned long wifireconnectTime = 0;
 unsigned long mqttreconnectTime = 0;
+bool correcttimeset = false, firstcorrecttime = false;
 
 IPAddress ip;
 bool obtainedwifi = false;
@@ -171,7 +172,7 @@ void MQTT_msg_callback(char* topic, byte* payload, unsigned int length) {
     Serial.println();
   }
 
-  if (topic == "intellettoBedSensor") { 
+  if (strcmp(topic, "intellettoBedSensor")==0) {
     //message from the bed sensor. 
     if ((char)payload[0] == '1') {
       // Person is in the BED
@@ -180,7 +181,7 @@ void MQTT_msg_callback(char* topic, byte* payload, unsigned int length) {
       // Person is out of the BED
       personinbed = false;  
     }
-  } else if (topic == "intelletto") {
+  } else if (strcmp(topic, "intelletto") == 0) {
     // The intelletto alarm subscribes to the intelletto topic
     // Messages arrive from:
     // 1. Switch on the LED control command received. 
@@ -246,7 +247,13 @@ void obtainDateTime() {
     date += " ";
     date += months[month(local)-1];
     date += ", ";
-    date += year(local);
+    int yearnow = year(local);
+    date += yearnow;
+    if (firstcorrecttime) firstcorrecttime = false;
+    if (!correcttimeset && yearnow > 2000) {
+      firstcorrecttime = true;
+      correcttimeset = true;
+    }
 
     if (UK_DATE) {
       // format the time to 12-hour format with AM/PM and no seconds
@@ -272,12 +279,25 @@ void obtainDateTime() {
       Serial.print(date);
       Serial.println("");
       Serial.print("Local time: ");
-      Serial.print(t);
+      Serial.println(t);
     }
   } else {
     //reconnect
     obtainedwifi = false;
   }
+}
+
+/* SET variable localtimenow to the correct current time */
+void determine_localtimenow() {
+  time_t timenow = now();
+  // Then convert the UTC UNIX timestamp to local time
+
+  // Then convert the UTC UNIX timestamp to local time
+  // normal time from zon 2 march to sun 2 nov 
+  TimeChangeRule euBRU = {"BRU", Second, Sun, Mar, 2, +60};  //normal time UTC + 1 hours - change this as needed
+  TimeChangeRule euUCT = {"UCT", First, Sun, Nov, 2, 0};     //daylight saving time summer: UTC - change this as needed
+  Timezone euBrussel(euBRU, euUCT);
+  localtimenow = euBrussel.toLocal(timenow);
 }
 
 
