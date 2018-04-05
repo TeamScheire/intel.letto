@@ -14,10 +14,12 @@
 
 
 /*  START USER SETTABLE OPTIONS */
+#define SERIALTESTOUTPUT false  // debug info
+#define TEST_ALARM true         // to test, start alarm on switch on
+
 // alarm
 uint8_t alarm_hour = 7;
 uint8_t alarm_min = 45;
-bool TEST_ALARM = true;
 bool alarm_set = true;  // do alarm or not
 uint8_t sunrise_start_min_before = 15;  // minutes to start alarm (=sunrise) before alarm time (max 59)
 uint8_t alarm_stop_min_after = 120;  // minutes to stop alarm after alarm time (max 120)
@@ -55,9 +57,6 @@ int pSCL = D1;
 
 //includes
 #include <Wire.h>
-
-// debug info
-#define SERIALTESTOUTPUT false
 
 //wifi and timing lib
 #include "wifilib.h"
