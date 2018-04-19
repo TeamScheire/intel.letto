@@ -10,8 +10,6 @@
 //MQTT library
 #include <PubSubClient.h>
 
-bool personinbed = true;
-
 unsigned long NTPUpdateInterval = 60000 ;
  
 unsigned long NTPstartTijd;
@@ -42,6 +40,12 @@ NTPClient timeClient(ntpUDP, NTP_ADDRESS, NTP_OFFSET, NTP_INTERVAL);
 // Set up the MQTT client
 WiFiClient espClient;
 PubSubClient MQTTclient(espClient);
+
+bool playtrack = false, stopplaying = false, trackplaying = false;
+uint8_t dirnr[5];    // an array big enough for a 4 character string of directory DXXX
+uint8_t track[13];    // an array big enough for a 12 character string of TRACKXXX.mp3
+String str_dirnr, str_track, str_volume = "";
+uint8_t volume=3;
 
 String date;
 String t;
@@ -114,16 +118,35 @@ void setupWiFi(bool wait)
 
 void MQTTsubscribe2topics() {
   //write here all MQTT topics we subscribe to. Act on it in the callback!
-  MQTTclient.subscribe("intellettoMassage");
+  MQTTclient.subscribe("intellettoLoudSp");
     if (SERIALTESTOUTPUT) {
       Serial.print("subscribed to ");
-      Serial.println("intellettoMassage");
+      Serial.println("intellettoLoudSp");
     }
+  //initialize variables we need
+  dirnr[0] = 'D';
+  dirnr[1] = '0';
+  dirnr[2] = '0';
+  dirnr[3] = '1';
+  dirnr[4] = 0;  // be sure to set the null terminator!!!
+  track[0] = 'T';
+  track[1] = 'R';
+  track[2] = 'A';
+  track[3] = 'C';
+  track[4] = 'K';
+  track[5] = '0';
+  track[6] = '0';
+  track[7] = '1';
+  track[8] = '.';
+  track[9] = 'm';
+  track[10] = 'p';
+  track[11] = '3';
+  track[12] = 0;
 }
 
 void MQTTpublish_reconnected() {
   //publish a message that we connected to 
-  MQTTclient.publish("intellettoStatus", "Massage reconnected to MQTTserver");
+  MQTTclient.publish("intellettoStatus", "LoudSpeaker reconnected to MQTTserver");
 }
 
 boolean MQTTpublish(const char* topic, const char* payload) {
@@ -132,6 +155,7 @@ boolean MQTTpublish(const char* topic, const char* payload) {
   // 1. switch on/off sonoff plugs
   // 2. control massage
   // 3. control heating
+  // 4. control playing a track
   MQTTclient.publish(topic, payload);
 }
 
@@ -139,12 +163,12 @@ void MQTTreconnect() {
   // We connect to the MQTT broker
   
   //we only try to set up mqtt connection once every 1 minutes !
-  if (!MQTTclient.connected() && millis() - mqttreconnectTime > 1*60000L) {
+  if (!MQTTclient.connected() && millis() - mqttreconnectTime > 1*5000L) {
     if (SERIALTESTOUTPUT) {
      Serial.print("Attempting MQTT connection...");
     }
     // Create a random client ID
-    String clientId = "ESP8266MassageClient-";
+    String clientId = "ESP8266MLoudSpClient-";
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
     if (MQTTclient.connect(clientId.c_str())) {
@@ -168,9 +192,8 @@ void MQTTreconnect() {
 
 void MQTT_msg_callback(char* topic, byte* payload, unsigned int length) {
   // if a topic subscribed to in reconnect occurs, this callback is called
-  // Here we only subscribe to topic intellettoMassage which is a number to 
-  // indicate what massage to start. 
-  // We propagate this to the SLAVE Arduino controller
+  // Here we only subscribe to topic intellettoLoudSp which is a number to 
+  // indicate what type of track to start.
   if (SERIALTESTOUTPUT) {
     Serial.print("Message arrived [");
     Serial.print(topic);
@@ -180,86 +203,39 @@ void MQTT_msg_callback(char* topic, byte* payload, unsigned int length) {
     }
     Serial.println();
   }
-
-  // The intelletto alarm subscribes to the intellettoMassage topic
-  // which is a code (Neck, Breast, Tummy, Hip) + number 0 off, 1 mid, 2 strong
-
-  if ((char)payload[0] == 'O') {
-    //switch massage off
-      send2Slave(MS_NONE);
-      current_program = 0;
+  // handle the message
+  
+  if ((char)payload[0] == 'D' && length >= 12 ) {
+    //play a track from a directory. Directory is a nummer three long, eg 022
+    //followed by TXXX, with XXX the track number
+    //followed by VXXX, with XXX volume, 0 being loud, 255 silent
+    playtrack = true;
+    stopplaying = false;
+    dirnr[1] = (char)payload[1];
+    dirnr[2] = (char)payload[2];
+    dirnr[3] = (char)payload[3];
+    track[5] = (char)payload[5];
+    track[6] = (char)payload[6];
+    track[7] = (char)payload[7];
+    str_volume = "";
+    str_dirnr = String((char*)dirnr);
+    str_track = String((char*)track);
+    if (isDigit((char)payload[9])) {
+      str_volume += (char)payload[9];
+    }
+    if (isDigit((char)payload[10])) {
+      str_volume += (char)payload[10];
+    }
+    if (isDigit((char)payload[11])) {
+      str_volume += (char)payload[11];
+    }
+    volume = str_volume.toInt();
   }
   
-  if ((char)payload[0] == 'N' || (char)payload[0] == 'A') {
-    current_program = 0;
-    //control command. Set a massage zone
-    if ((char)payload[1] == '0') {
-      // Turn Neck Massage off  
-      send2Slave(MS_NECKOFF);
-    } else if ((char)payload[1] == '1'){
-      // Turn Neck Massage to medium
-      send2Slave(MS_NECKWEAK);
-    } else {
-      // Turn Neck Massage to high
-      send2Slave(MS_NECK);
-    }
-  }
-  
-  if ((char)payload[0] == 'B' || (char)payload[0] == 'A') {
-    current_program = 0;
-    //control command. Set a massage zone
-    if ((char)payload[1] == '0') {
-      // Turn Massage off  
-      send2Slave(MS_BREASTOFF);
-    } else if ((char)payload[1] == '1'){
-      // Turn Massage to medium
-      send2Slave(MS_BREASTWEAK);
-    } else {
-      // Turn Massage to high
-      send2Slave(MS_BREAST);
-    }
-  }
-  
-  if ((char)payload[0] == 'T' || (char)payload[0] == 'A') {
-    current_program = 0;
-    //control command. Set a massage zone
-    if ((char)payload[1] == '0') {
-      // Turn Massage off  
-      send2Slave(MS_BELLYOFF);
-    } else if ((char)payload[1] == '1'){
-      // Turn Massage to medium
-      send2Slave(MS_BELLYWEAK);
-    } else {
-      // Turn Massage to high
-      send2Slave(MS_BELLY);
-    }
-  }
-  
-  if ((char)payload[0] == 'H' || (char)payload[0] == 'A') {
-    current_program = 0;
-    //control command. Set a massage zone
-    if ((char)payload[1] == '0') {
-      // Turn Massage off  
-      send2Slave(MS_HIPOFF);
-    } else if ((char)payload[1] == '1'){
-      // Turn Massage to medium
-      send2Slave(MS_HIPWEAK);
-    } else {
-      // Turn Massage to high
-      send2Slave(MS_HIP);
-    }
-  }
-  
-  if ((char)payload[0] == 'P') {
-    if ((char)payload[1] == '1') {
-      // request to start program 1
-      if (current_program != 1) {
-        //program needs to start:
-        start_program_time = millis();
-        current_program = 1;
-      }
-    }
-    // else : unknown program, we do nothing ...
+  if ((char)payload[0] == 'S') {
+    //stop playing a track
+    playtrack = false;
+    stopplaying = true;
   }
 }
 
@@ -272,7 +248,12 @@ void setupMQTTClient() {
 void handleMQTTClient() {
   // to call in the loop of the arduino
   if (!MQTTclient.connected()) {
+    // LED on to  indicate connection problem
+    digitalWrite(LED_BUILTIN, LOW);
     MQTTreconnect();
+  } else {
+    // LED off all is ok
+    digitalWrite(LED_BUILTIN, HIGH);
   }
   MQTTclient.loop();
 }

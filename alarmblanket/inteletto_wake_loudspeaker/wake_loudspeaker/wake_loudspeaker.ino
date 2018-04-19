@@ -40,7 +40,10 @@ const char* mqtt_server = "192.168.0.111";
 // include SPI, MP3 and SD libraries
 #include <SPI.h>
 #include <Adafruit_VS1053.h>
+//following should use ESP version ~/.arduino15/packages/esp8266/hardware/esp8266/2.4.0/libraries/SD
 #include <SD.h>
+//wifi and timing lib
+#include "wifilib.h"
 
 // define the pins used
 //#define CLK 13       // SPI Clock, shared with SD card
@@ -67,13 +70,16 @@ Adafruit_VS1053_FilePlayer musicPlayer =
   //Adafruit_VS1053_FilePlayer(SHIELD_RESET, SHIELD_CS, SHIELD_DCS, DREQ, CARDCS);
   
 void setup() {
-  //delay(10000);
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(1000);
+  digitalWrite(LED_BUILTIN, LOW);
   if (SERIALTESTOUTPUT) Serial.begin(9600);
   if (SERIALTESTOUTPUT) Serial.println("VS1053 Control");
 
   if (! musicPlayer.begin()) { // initialise the music player
      if (SERIALTESTOUTPUT) Serial.println(F("Couldn't find VS1053, do you have the right pins defined?"));
-     while (1);
+     while (1); // don't do anything more
   }
   if (SERIALTESTOUTPUT) Serial.println(F("VS1053 found"));
   
@@ -85,9 +91,6 @@ void setup() {
   // list files
   if (SERIALTESTOUTPUT) printDirectory(SD.open("/"), 0);
   
-  // Set volume for left, right channels. lower numbers == louder volume!
-  musicPlayer.setVolume(20,20);
-
   // Timer interrupts are not suggested, better to use DREQ interrupt!
   //musicPlayer.useInterrupt(VS1053_FILEPLAYER_TIMER0_INT); // timer int
 
@@ -95,43 +98,106 @@ void setup() {
   // audio playing
   musicPlayer.useInterrupt(VS1053_FILEPLAYER_PIN_INT);  // DREQ int
   
+  // Set volume for left, right channels. lower numbers == louder volume!
+  musicPlayer.setVolume(volume,volume);
+
   // Play one file, don't return until complete
-  if (SERIALTESTOUTPUT)  Serial.println(F("Playing track 001"));
-  musicPlayer.playFullFile("TRACK001.mp3");
+  // if (SERIALTESTOUTPUT)  Serial.println(F("Playing track 001"));
+  // musicPlayer.playFullFile("TRACK001.mp3");
   // Play another file in the background, REQUIRES interrupts!
-  if (SERIALTESTOUTPUT)  Serial.println(F("Playing track 002"));
-  musicPlayer.startPlayingFile("TRACK002.mp3");
+  // if (SERIALTESTOUTPUT)  Serial.println(F("Playing track 002"));
+  // musicPlayer.startPlayingFile("TRACK002.mp3");
+
+  //now we set up wifi
+  
+  while (WiFi.status() != WL_CONNECTED) {
+   setupWiFi(true); // Connect to local Wifi
+  }
+  //set randomseed
+  randomSeed(micros());
+
+  // mqtt client start
+  // Here we subscribe to MQTT topic intellettoLoudSp
+  setupMQTTClient();
+  
 }
 
 void loop() {
+  //handle MQTT messages
+  handleMQTTClient();
+  
   // File is playing in the background
-  if (musicPlayer.stopped()) {
+  if (trackplaying && musicPlayer.stopped()) {
     if (SERIALTESTOUTPUT) Serial.println("Done playing music");
-    while (1) {
-      delay(10);  // we're done! do nothing...
-    }
+    trackplaying = false;
   }
-  if (SERIALTESTOUTPUT && Serial.available()) {
-    char c = Serial.read();
-    
-    // if we get an 's' on the serial console, stop!
-    if (c == 's') {
+
+//  if (SERIALTESTOUTPUT && Serial.available()) {
+//    char c = Serial.read();
+//    
+//    // if we get an 's' on the serial console, stop!
+//    if (c == 's') {
+//      musicPlayer.stopPlaying();
+//    }
+//    
+//    // if we get an 'p' on the serial console, pause/unpause!
+//    if (c == 'p') {
+//      if (! musicPlayer.paused()) {
+//        Serial.println("Paused");
+//        musicPlayer.pausePlaying(true);
+//      } else { 
+//        Serial.println("Resumed");
+//        musicPlayer.pausePlaying(false);
+//      }
+//    }
+//  }
+  
+  if (stopplaying) {
+    stopplaying = false;
+    if (! musicPlayer.stopped()) {
+      //stop current track
+      if (SERIALTESTOUTPUT) Serial.println("STOPPING");
       musicPlayer.stopPlaying();
-    }
-    
-    // if we get an 'p' on the serial console, pause/unpause!
-    if (c == 'p') {
-      if (! musicPlayer.paused()) {
-        Serial.println("Paused");
-        musicPlayer.pausePlaying(true);
-      } else { 
-        Serial.println("Resumed");
-        musicPlayer.pausePlaying(false);
-      }
     }
   }
 
-  delay(100);
+  if (playtrack) {
+    // stop running track
+    if (! musicPlayer.stopped()) {
+      if (SERIALTESTOUTPUT) Serial.println("STOPPING RUNNING TRACK");
+      musicPlayer.stopPlaying();
+      trackplaying = false;
+    }
+    while (! musicPlayer.stopped()) {
+      delay(10);
+    }
+    musicPlayer.reset();
+    //musicPlayer.begin();
+    // set volume first
+    // Set volume for left, right channels. lower numbers == louder volume!
+    if (SERIALTESTOUTPUT) {
+      Serial.print("Setting volume ");Serial.println(volume);
+    }
+    musicPlayer.setVolume(volume,volume);
+    // create file to load
+    String trackname = "/";
+    trackname += str_dirnr;
+    trackname += "/";
+    trackname += str_track;
+    char trackbuffer[trackname.length()+1];
+    trackname.toCharArray(trackbuffer, trackname.length()+1);
+    if (SERIALTESTOUTPUT) {
+        Serial.print("playing track ");
+        Serial.print(trackname);
+        Serial.print("  ");
+        Serial.println(trackbuffer);
+      }
+    musicPlayer.startPlayingFile(trackbuffer);
+    trackplaying = true;
+    playtrack = false;
+  }
+
+  //delay(10);
 }
 
 
