@@ -28,12 +28,13 @@ uint8_t static_gateway_IP[4] = {192, 168, 1, 1};// if you want to use static IP 
 
 // wifi data
 // write here your wifi credentials 
-const char* ssid = "*****";   // insert your own ssid 
+//const char* ssid = "*****";   // insert your own ssid 
 const char* password = "********"; // and password
+const char* ssid = "intelletto";   // insert your own ssid 
 
 //mqtt server/broker 
 //const char* mqtt_server = "broker.mqtt-dashboard.com";
-const char* mqtt_server = "192.168.0.111";
+const char* mqtt_server = "192.168.4.1";
 
 /*  END USER SETTABLE OPTIONS */
 // OLED display with U8g2 lib
