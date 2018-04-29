@@ -32,6 +32,22 @@ unsigned long mqttmassagemsgtime = 0;
 // repeat mqtt messages for safety every xx millisec
 unsigned long mqttmsginterval = 5000L;
 
+//variables for the  speak waking 
+bool speachprogplaying = false, speachprognewtrack = false;
+unsigned long speachprogtimestart = 0;
+int speachprogdir = 0, speachprogtrack = 0, speachprogvolume=255;
+#define SPEACHDIR_PREALARM  5 //directory with pre alarm messages
+#define SPEACHDIR_PREALARM_NRTRACKS 7 //tracks from 001 to XXX
+#define SPEACHDIR_TODAY 1 //directory with messages why to stand up today
+#define SPEACHDIR_TODAY_NRTRACKS 4 //tracks from 001 to XXX
+#define SPEACHDIR_GENERAL 2 //directory with general messages why to stand up
+#define SPEACHDIR_GENERAL_NRTRACKS 3 //tracks from 001 to XXX
+#define SPEACHDIR_ANIMAL 3 //directory with messages why to stand up today
+#define SPEACHDIR_ANIMAL_NRTRACKS 4 //tracks from 001 to XXX
+#define SPEACHDIR_FUNNY 4 //directory with general messages why to stand up
+#define SPEACHDIR_FUNNY_NRTRACKS 6 //tracks from 001 to XXX
+
+
 void determine_wake_scenario(long sec_alarm, long millis_alarm, int& beepstrength) {
   /* FIRST WE DETERMINE BUZZER WAKE SCENARIO
    *  
@@ -191,7 +207,89 @@ void determine_wake_scenario(long sec_alarm, long millis_alarm, int& beepstrengt
   /* WE DETERMINE SPEACH WAKE SCENARIO
    *  
    */
-  // TODO
+  // 15 min before alarm a first test. Every 3 min another message
+  // when alarm is actually started, do the texts from D001, + random texts every 
+  // 30 sec
+   
+  // when playing a track, we do a 25 sec exclusion zone in which no new tracks are started
+  speachprogdir = 0; //nothing to say
+  speachprognewtrack = false;
   
+  if (!speachprogplaying && sec_alarm < 0) {
+    if (sec_alarm > -15*60 && sec_alarm < -15*60+20 ) {
+      //say something from directory PREALARM
+      speachprogdir = SPEACHDIR_PREALARM;
+      //a random track between first and last track
+      speachprogtrack = random(1, SPEACHDIR_PREALARM_NRTRACKS +1);
+      // not too loud
+      speachprogvolume = 100;
+    } else if (sec_alarm > -12*60 && sec_alarm < -12*60+20 ) {
+      //say something from directory PREALARM
+      speachprogdir = SPEACHDIR_PREALARM;
+      //a random track between first and last track
+      speachprogtrack = random(1, SPEACHDIR_PREALARM_NRTRACKS +1);
+      speachprogvolume = 80;
+    } else if (sec_alarm > -9*60 && sec_alarm < -9*60+20 ) {
+      //say something from directory PREALARM
+      speachprogdir = SPEACHDIR_PREALARM;
+      //a random track between first and last track
+      speachprogtrack = random(1, SPEACHDIR_PREALARM_NRTRACKS +1);
+      speachprogvolume = 60;
+    } else if (sec_alarm > -6*60 && sec_alarm < -6*60+20 ) {
+      //say something from directory PREALARM
+      speachprogdir = SPEACHDIR_PREALARM;
+      //a random track between first and last track
+      speachprogtrack = random(1, SPEACHDIR_PREALARM_NRTRACKS +1);
+      speachprogvolume = 40;
+    } else  if (sec_alarm > -3*60 && sec_alarm < -3*60+20 ) {
+      //say something from directory PREALARM
+      speachprogdir = SPEACHDIR_PREALARM;
+      //a random track between first and last track
+      speachprogtrack = random(1, SPEACHDIR_PREALARM_NRTRACKS +1);
+      speachprogvolume = 30;
+    }
+  }
+
+  if (!speachprogplaying && sec_alarm > 0) {
+    //alarm time, every min +0 sec an important reminder, every min+30 sec funny reminder
+    if (sec_alarm % 60 < 20 ) {
+      speachprogdir = random(1, 3);
+      speachprogvolume = random(0, 10);
+      if (speachprogdir == SPEACHDIR_TODAY) {
+        //a random track between first and last track
+        speachprogtrack = random(1, SPEACHDIR_TODAY_NRTRACKS +1);
+      } else if (speachprogdir == SPEACHDIR_GENERAL) {
+        //a random track between first and last track
+        speachprogtrack = random(1, SPEACHDIR_GENERAL_NRTRACKS +1);
+      }
+    } else if (sec_alarm % 60 > 30 && sec_alarm % 60 < 50) {
+      speachprogdir = random(3, 5);
+      speachprogvolume = random(0, 20);
+      if (speachprogdir == SPEACHDIR_ANIMAL) {
+        //a random track between first and last track
+        speachprogtrack = random(1, SPEACHDIR_ANIMAL_NRTRACKS +1);
+      } else if (speachprogdir == SPEACHDIR_FUNNY) {
+        //a random track between first and last track
+        speachprogtrack = random(1, SPEACHDIR_FUNNY_NRTRACKS +1);
+      }
+    }
+  }
+  
+  if (speachprogplaying) {
+    //after 25 sec we should indicate playing stopped
+    if (millis() < speachprogtimestart) {
+      // millis looped around and restarted, reset
+      speachprogplaying = false;
+    } else if (millis() > speachprogtimestart + 25000) {
+      // 25 sec passed since starting
+      speachprogplaying = false;
+    }
+  }
+  if (speachprogdir != 0) {
+    //we should play a track
+    speachprogplaying = true;
+    speachprognewtrack = true;
+    speachprogtimestart = millis();
+  }
 }
 
