@@ -141,7 +141,7 @@ void MQTTsubscribe2topics() {
   track[9] = 'm';
   track[10] = 'p';
   track[11] = '3';
-  track[12] = 0;
+  track[12] = 0;  // be sure to set the null terminator!!!
 }
 
 void MQTTpublish_reconnected() {
