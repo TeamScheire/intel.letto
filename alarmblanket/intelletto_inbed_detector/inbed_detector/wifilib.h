@@ -1,5 +1,6 @@
  
 #include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
 #include <WiFiUdp.h>
 
 #include <NTPClient.h>
@@ -40,7 +41,13 @@ NTPClient timeClient(ntpUDP, NTP_ADDRESS, NTP_OFFSET, NTP_INTERVAL);
 
 // Set up the MQTT client
 WiFiClient espClient;
+//WiFiClient testClient;
 PubSubClient MQTTclient(espClient);
+
+#define MQTT_HOST            "192.168.4.1"          // [MqttHost]
+#define MQTT_PORT            1883              // [MqttPort] MQTT port (10123 on CloudMQTT)
+#define MQTT_USER            "DVES_USER"       // [MqttUser] Optional user
+#define MQTT_PASS            "DVES_PASS"       // [MqttPassword] Optional password
 
 String date;
 String t;
@@ -131,10 +138,15 @@ boolean MQTTpublish(const char* topic, const char* payload) {
 }
 
 void MQTTreconnect() {
+  // test  
+  //int restest = testClient.connect(mqtt_server_IP, 1883);
+  //if (SERIALTESTOUTPUT) {
+  // Serial.print(" MQTT test connection...");Serial.println(restest);
+  //}
   // We connect to the MQTT broker
   
   //we only try to set up mqtt connection once every 1 minutes !
-  if (!MQTTclient.connected() && millis() - mqttreconnectTime > 1*60000L) {
+  if (!MQTTclient.connected() && (millis() < 60000L || millis() - mqttreconnectTime > 1*60000L)) {
     if (SERIALTESTOUTPUT) {
      Serial.print("Attempting MQTT connection...");
     }

@@ -34,7 +34,11 @@ const char* ssid = "intelletto";   // insert your own ssid
 
 //mqtt server/broker 
 //const char* mqtt_server = "broker.mqtt-dashboard.com";
-const char* mqtt_server = "192.168.4.1";
+//const char* mqtt_server = "192.168.4.1";
+//const char* mqtt_server = "192.168.1.15";  //eth0 address of the raspberry pi
+//uint8_t mqtt_server_IP[4] = {192, 168, 1, 15};
+const char* mqtt_server = "192.168.0.213";  //eth0 address of the raspberry pi
+uint8_t mqtt_server_IP[4] = {192, 168, 0, 213};
 
 /*  END USER SETTABLE OPTIONS */
 // OLED display with U8g2 lib

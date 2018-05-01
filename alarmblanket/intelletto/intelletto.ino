@@ -19,7 +19,7 @@
 
 // alarm
 uint8_t alarm_hour = 7;
-uint8_t alarm_min = 55;
+uint8_t alarm_min = 15;
 bool alarm_set = true;  // do alarm or not
 uint8_t sunrise_start_min_before = 15;  // minutes to start alarm (=sunrise) before alarm time (max 59)
 uint8_t alarm_stop_min_after = 120;  // minutes to stop alarm after alarm time (max 120)
@@ -37,7 +37,16 @@ const char* ssid = "intelletto";   // insert your own ssid
 
 //mqtt server/broker 
 //const char* mqtt_server = "broker.mqtt-dashboard.com";
-const char* mqtt_server = "192.168.4.1";
+//const char* mqtt_server = "raspberrypi.local";
+const char* mqtt_server = "192.168.1.29";  //eth0 address of the raspberry pi - Ingegno
+uint8_t mqtt_server_IP[4] = {192, 168, 1, 29};
+//const char* mqtt_server = "192.168.0.213";  //eth0 address of the raspberry pi - Big Fix
+//uint8_t mqtt_server_IP[4] = {192, 168, 0, 213};
+
+//NTP settings
+//#define NTP_ADDRESS  "raspberrypi.local"  // change this to whatever pool is closest (see ntp.org)
+#define NTP_ADDRESS  "192.168.1.29"   // eth0 address of the raspberry pi Ingegno Maker Space
+//#define NTP_ADDRESS  "192.168.0.213"// eth0 bij Big Fix
 
 /*  END USER SETTABLE OPTIONS */
 

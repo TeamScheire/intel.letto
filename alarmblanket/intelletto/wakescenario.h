@@ -96,7 +96,7 @@ void determine_wake_scenario(long sec_alarm, long millis_alarm, int& beepstrengt
         ventchanged = true;
       }
       // set a new time to change ventilator
-      next_vent_change += random(30, 60);
+      next_vent_change = sec_alarm + random(30, 60);
     }
   }
   // 1 min before alarm we set ventilator on  
@@ -159,9 +159,11 @@ void determine_wake_scenario(long sec_alarm, long millis_alarm, int& beepstrengt
       massagechanged = true;
       // select a new state
       int newstate = random(0, nrmassagestates);
-      char buf[2];
+      int intensity = random(0, 3);
+      //following not working, no time to debug, just code it ...
+      /*      
+      char buf[3]="";
       strcpy(buf, massagestates[newstate]);
-      int intensity = random(0,3);
       const char *zero = "0";
       const char *one = "1";
       const char *two = "2";
@@ -173,34 +175,73 @@ void determine_wake_scenario(long sec_alarm, long millis_alarm, int& beepstrengt
       } else {
         strcat(buf, two);
       }
-      newmassagestate = buf;
+      newmassagestate = buf;  */ 
+      if (massagestates[newstate] == "O") {
+        newmassagestate = "O0";
+      } else if (massagestates[newstate] == "N") {
+        if (intensity == 0) {
+          //switch off
+          newmassagestate = "N0";
+        } else if (intensity == 1) {
+          newmassagestate = "N1";
+        } else {
+          newmassagestate = "N2";
+        }
+      } else if (massagestates[newstate] == "B") {
+        if (intensity == 0) {
+          //switch off
+          newmassagestate = "B0";
+        } else if (intensity == 1) {
+          newmassagestate = "B1";
+        } else {
+          newmassagestate = "B2";
+        }
+      } else if (massagestates[newstate] == "T") {
+        if (intensity == 0) {
+          //switch off
+          newmassagestate = "T0";
+        } else if (intensity == 1) {
+          newmassagestate = "T1";
+        } else {
+          newmassagestate = "T2";
+        }
+      }else if (massagestates[newstate] == "H") {
+        if (intensity == 0) {
+          //switch off
+          newmassagestate = "H0";
+        } else if (intensity == 1) {
+          newmassagestate = "H1";
+        } else {
+          newmassagestate = "H2";
+        }
+      }
       
       // set a new time to change ventilator
-      next_massage_change += random(10, 21);
-    } else if (sec_alarm > -15 * 60 && sec_alarm < -14 * 60) {
-      //all motors on 
-      if (newmassagestate[0] != 'A') {
-        newmassagestate = "A1";
-        massagechanged = true;
-      }
-    } else if (sec_alarm > -10 * 60 && sec_alarm < -8 * 60) {
-      // execute program 1 
-      if (newmassagestate[0] != 'P') {
-        newmassagestate = "P1";
-        massagechanged = true;
-      }
-    } else if (sec_alarm > -4 * 60 && sec_alarm < -2 * 60) {
-      // execute program 1 
-      if (newmassagestate[0] != 'P') {
-        newmassagestate = "P1";
-        massagechanged = true;
-      }
-    } else {
-      //no massage
-      if (newmassagestate[0] != 'O') {
-        newmassagestate = "O0";
-        massagechanged = true;
-      }
+      next_massage_change = sec_alarm + random(10, 21);
+    } 
+  } else if (sec_alarm > -15 * 60 && sec_alarm < -14 * 60) {
+    //all motors on for one minute
+    if (newmassagestate[0] != 'A') {
+      newmassagestate = "A2";
+      massagechanged = true;
+    }
+  } else if (sec_alarm > -10 * 60 && sec_alarm < -8 * 60) {
+    // execute program 1 
+    if (newmassagestate[0] != 'P') {
+      newmassagestate = "P1";
+      massagechanged = true;
+    }
+  } else if (sec_alarm > -4 * 60 && sec_alarm < -2 * 60) {
+    // execute program 1 
+    if (newmassagestate[0] != 'P') {
+      newmassagestate = "P1";
+      massagechanged = true;
+    }
+  } else {
+    //no massage
+    if (newmassagestate[0] != 'O') {
+      newmassagestate = "O0";
+      massagechanged = true;
     }
   }
 

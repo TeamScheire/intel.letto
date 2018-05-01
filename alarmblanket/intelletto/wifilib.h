@@ -2,7 +2,7 @@
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 
-#include <NTPClient.h>
+#include "myNTPClient.h"
 #include <Time.h>
 #include <TimeLib.h>
 #include <Timezone.h>
@@ -16,25 +16,26 @@ unsigned long NTPUpdateInterval = 60000 ;
  
 unsigned long NTPstartTijd;
 unsigned long NTPlastUpdate;
-time_t utc, localtimenow;
+time_t utc, localtimenow=0;
 unsigned long huidigeTijd;
 unsigned long wifireconnectTime = 0;
 unsigned long mqttreconnectTime = 0;
 bool correcttimeset = false, firstcorrecttime = false;
 
 IPAddress ip;
+IPAddress  mqtt_ip(mqtt_server_IP[0], mqtt_server_IP[1], mqtt_server_IP[2], mqtt_server_IP[3]);
+
 bool obtainedwifi = false;
 
 // Define NTP properties
 #define NTP_OFFSET   60 * 60      // In seconds
 #define NTP_INTERVAL 60 * 1000    // In miliseconds
-#define NTP_ADDRESS  "ca.pool.ntp.org"  // change this to whatever pool is closest (see ntp.org)
-//#define NTP_ADDRESS  "europe.pool.ntp.org"  // change this to whatever pool is closest (see ntp.org)
 bool UK_DATE = false;
 
 // Set up the NTP UDP client
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, NTP_ADDRESS, NTP_OFFSET, NTP_INTERVAL);
+//NTPClient timeClient2(ntpUDP, NTP_ADDRESS2, NTP_OFFSET, NTP_INTERVAL);
 
 // Set up the MQTT client
 WiFiClient espClient;
@@ -98,6 +99,8 @@ void setupWiFi(bool wait)
          if (SERIALTESTOUTPUT) Serial.println(" ");
       }
       if (millis() - startwait > 20000L ) {
+        Serial.println("");
+        Serial.println("Could not connect WiFi");
         return;
       }
     }
@@ -133,7 +136,7 @@ void MQTTreconnect() {
   // We connect to the MQTT broker
   
   //we only try to set up mqtt connection once every 1 minutes !
-  if (!MQTTclient.connected() && millis() - mqttreconnectTime > 1*60000L) {
+  if (!MQTTclient.connected() && (millis() < 60000L || millis() - mqttreconnectTime > 1*60000L)) {
     if (SERIALTESTOUTPUT) {
      Serial.print("Attempting MQTT connection...");
     }
@@ -142,8 +145,9 @@ void MQTTreconnect() {
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
     if (MQTTclient.connect(clientId.c_str())) {
+    //if (MQTTclient.connect("192.168.4.12")) {
       if (SERIALTESTOUTPUT) {
-        Serial.println("connected");
+        Serial.println("connected now");
       }
       // Once connected, publish an announcement ?
       MQTTpublish_reconnected();
@@ -223,10 +227,16 @@ void obtainDateTime() {
     date = "";  // clear the variables
     t = "";
     
-    // update the NTP client and get the UNIX UTC timestamp 
-    timeClient.update();
-    NTPlastUpdate = millis();
-    unsigned long epochTime =  timeClient.getEpochTime();
+    // update the NTP client and get the UNIX UTC timestamp
+    unsigned long epochTime; 
+    //if (random(0,2) == 0) {
+      timeClient.update();
+      NTPlastUpdate = millis();
+      epochTime =  timeClient.getEpochTime();
+    //} else {timeClient2.update();
+    //  NTPlastUpdate = millis();
+    //  epochTime =  timeClient2.getEpochTime();
+    //}
 
     // convert received time stamp to time_t object
     time_t local;
