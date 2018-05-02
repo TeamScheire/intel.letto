@@ -6,7 +6,7 @@
 // Libraries needed:
 //  Time.h & TimeLib.h:  https://github.com/PaulStoffregen/Time
 //  Timezone.h: (via install library) https://github.com/JChristensen/Timezone
-//  NTPClient.h: (via install library) https://github.com/arduino-libraries/NTPClient
+//  NTPClient.h: (via install library .. replaced by own library for now) https://github.com/arduino-libraries/NTPClient
 //  ESP8266WiFi.h & WifiUDP.h: (via adding esp on board manager) https://github.com/ekstrand/ESP8266wifi
 //  U8g2: for OLED display via install library
 //  Adafruit neopixel library: via install library
@@ -38,15 +38,15 @@ const char* ssid = "intelletto";   // insert your own ssid
 //mqtt server/broker 
 //const char* mqtt_server = "broker.mqtt-dashboard.com";
 //const char* mqtt_server = "raspberrypi.local";
-const char* mqtt_server = "192.168.1.29";  //eth0 address of the raspberry pi - Ingegno
-uint8_t mqtt_server_IP[4] = {192, 168, 1, 29};
-//const char* mqtt_server = "192.168.0.213";  //eth0 address of the raspberry pi - Big Fix
-//uint8_t mqtt_server_IP[4] = {192, 168, 0, 213};
+//const char* mqtt_server = "192.168.1.29";  //eth0 address of the raspberry pi - Ingegno
+//uint8_t mqtt_server_IP[4] = {192, 168, 1, 29};
+const char* mqtt_server = "192.168.0.213";  //eth0 address of the raspberry pi - Big Fix
+uint8_t mqtt_server_IP[4] = {192, 168, 0, 213};
 
 //NTP settings
 //#define NTP_ADDRESS  "raspberrypi.local"  // change this to whatever pool is closest (see ntp.org)
-#define NTP_ADDRESS  "192.168.1.29"   // eth0 address of the raspberry pi Ingegno Maker Space
-//#define NTP_ADDRESS  "192.168.0.213"// eth0 bij Big Fix
+//#define NTP_ADDRESS  "192.168.1.29"   // eth0 address of the raspberry pi Ingegno Maker Space
+#define NTP_ADDRESS  "192.168.0.213"// eth0 bij Big Fix
 
 /*  END USER SETTABLE OPTIONS */
 
@@ -184,6 +184,7 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED) {
    setupWiFi(true); // Connect to local Wifi
   }
+  
   //set randomseed
   randomSeed(micros());
 
@@ -206,6 +207,10 @@ void setup() {
     Serial.print(ip[3]);
     Serial.println("");
   }
+  
+  //do MQTT connect if needed
+  MQTTreconnect();
+  
   initial_display(true);
   obtainedwifi = true;
   delay(1000);
@@ -272,7 +277,6 @@ void loop() {
     do_alarm_mode();
   }
  
-  
   // if disconnected, reconnect to wifi:
   if ( WiFi.status() != WL_CONNECTED) {
       delay(1);
@@ -305,6 +309,16 @@ void loop() {
     MQTTpublish("intellettoMassage", newmassagestate);
     massagechanged = false;
     mqttmassagemsgtime = huidigeTijd;
+  }
+
+  //now we play a track if needed in the wake scenario
+  if (speachprognewtrack && speachprogdir != 0) {
+    //we play the given dir and track and volume
+    char playbuffer[13] = ""; //one longer for termination byte than what we store
+    sprintf(playbuffer, "D%03dT%03dV%03d", speachprogdir, speachprogtrack, speachprogvolume);
+    MQTTpublish("intellettoLoudSp", playbuffer);
+    //only publish this once
+    speachprognewtrack = false;
   }
   
   if (SERIALTESTOUTPUT) {
@@ -361,7 +375,7 @@ void do_normal_mode() {
   } else if (Drukknop1_PROGMODE_M) {
     if (Drukknop1_PROGMODE_M_1MORE) {
       alarm_min += 1; 
-      if (alarm_hour > 59) alarm_min = 0;
+      if (alarm_min > 59) alarm_min = 0;
       Drukknop1_PROGMODE_M_1MORE = false;
       determine_alarm_values(alarm_hour, alarm_min, sunrise_start_min_before);
     }
