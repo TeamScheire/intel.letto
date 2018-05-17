@@ -17,9 +17,11 @@ Variables:
 */
 
 const bool SERIALTESTOUTPUT = true;
+#define SERIALSPEED 115200
 const bool SHOWonU8g2 = true;
 const int connectedelectrodes = 6; // how many touch electrodes present?
-const unsigned int inbed_cap = 25; // hard coded, if <= inbed_cap, then person on top of the electrode
+const unsigned int inbed_cap[connectedelectrodes] = {
+  22, 25, 25, 25, 25, 22}; // hard coded, if <= inbed_cap, then person on top of the electrode
 bool changedstate = false;
 
 bool use_static_IP = false;         //use a static IP address
@@ -82,7 +84,7 @@ void setup(void) {
   intervalshow = 500L;
   intervalinbed = 1000L;
   if (SERIALTESTOUTPUT) {
-    Serial.begin(115200);   // We'll send debugging information via the Serial monitor
+    Serial.begin(SERIALSPEED);   // We'll send debugging information via the Serial monitor
     Serial.print("Serial started! ");
   }
 
@@ -283,7 +285,7 @@ void readTouchInputs(){
   if ((millis() - startinbedtime) > intervalinbed) {
     //update the inbed states
     for (uint8_t i=0; i<connectedelectrodes; i++) {
-      if (filteredData(i) <= inbed_cap || baselineData(i) <= inbed_cap) {
+      if (filteredData(i) <= inbed_cap[i] || baselineData(i) <= inbed_cap[i]) {
         personinbedStates[i] = true; 
       } else {
         personinbedStates[i] = false; 
