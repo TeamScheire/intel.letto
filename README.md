@@ -1,5 +1,22 @@
-# alarmblanket
-A blanket that can be used with an alarm
+# Intel.Letto
+An intelligent alarm clock connected to your bed. This is an alarm developed for a Belgian tv show, [Team Scheire](http://www.canvas.be/team-scheire), in order to help somebody who does not wake up from normal alarms, due to a disturbed sleeping cycle. 
+Before using this solution, contact a doctor to determine your sleeping disorder! Intel.Letto was used to help with Delayed Sleep Phase Syndrome (DSPS), but could be useful in other cases. Nevertheless, a technical solution is **never** the complete answer, a doktor should be your first stop!
+
+Intel.Letto works by working on all stimuli:
+
+* sound: a normal buzzer
+* sound: voices, animals, reminders. Interaction that requires the brain to listen
+* touch: wind from a fan blowing irregularly
+* touch: massage movement in an irregular unpredictable way
+* light: waking up requires high lumen light to be switched on
+* light: in the pre-alarm phase we add sunrise to help becoming aware of the need to get up.
+* brain activity: deep sleepers can switch of alarms, then continue sleeping. To avoid this, a bed detector is present. You can only switch of the alarm when you are *not* in the bed. Also, a specific action must be done.
+
+All the above is done to gradually make the sleeper aware of the fact they need to get up. On the alarm time, the cycle becomes stronger. In a rough drawing:
+![wake up sequence](doc/intelletto_sequentie.png)
+
+## Hardware
+
 
 ## Arduino Test Sketches
 
