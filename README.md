@@ -25,8 +25,6 @@ We use a Raspberry Pi 3B, which you can buy eg in a simple package from [Vellema
 
 Such a package comes with an empty microSD card, which we need to prepare before use. We install a linux OS on it, see the [software guide](https://www.raspberrypi.org/learning/software-guide/) for more info. Download the linux OS Raspbian as an `.iso` or `.zip` file from [download pagina Raspbian](https://www.raspberrypi.org/downloads/raspbian/). The zip has te be unpacked by a modern unzip application. Intel.Letto has been tested with
 
-* 2018-04-18-raspbian-stretch.zip
-* 2018-10-09-raspbian-stretch.zip
 * 2018-11-13-raspbian-stretch-full.zip
 
 Download now `Etcher` for your PC from [etcher.io/](https://etcher.io/). When downloaded, install it, and start Etcher. Select the Raspbian .iso that you downloaded, select the  microSD card as carrier, and press on kaart `Flash`. Wait for it to finish, and you have the hard disk as needed for your Raspberry Pi ready. Put it in the device in the correct slot.
