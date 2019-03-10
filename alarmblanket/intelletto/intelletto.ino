@@ -36,17 +36,15 @@ const char* password = "********"; // and password
 const char* ssid = "intelletto";   // insert your own ssid 
 
 //mqtt server/broker 
-//const char* mqtt_server = "broker.mqtt-dashboard.com";
-//const char* mqtt_server = "raspberrypi.local";
-//const char* mqtt_server = "192.168.1.29";  //eth0 address of the raspberry pi - Ingegno
-//uint8_t mqtt_server_IP[4] = {192, 168, 1, 29};
-const char* mqtt_server = "192.168.0.213";  //eth0 address of the raspberry pi - Big Fix
-uint8_t mqtt_server_IP[4] = {192, 168, 0, 213};
+const char* mqtt_server = "192.168.1.28";  //eth0 address of the raspberry pi - Ingegno
+uint8_t mqtt_server_IP[4] = {192, 168, 1, 28};
+//const char* mqtt_server = "192.168.0.212";  //eth0 address of the raspberry pi - Big Fix
+//uint8_t mqtt_server_IP[4] = {192, 168, 0, 212};
 
 //NTP settings
 //#define NTP_ADDRESS  "raspberrypi.local"  // change this to whatever pool is closest (see ntp.org)
-//#define NTP_ADDRESS  "192.168.1.29"   // eth0 address of the raspberry pi Ingegno Maker Space
-#define NTP_ADDRESS  "192.168.0.213"// eth0 bij Big Fix
+#define NTP_ADDRESS  "192.168.1.28"   // eth0 address of the raspberry pi Ingegno Maker Space
+//#define NTP_ADDRESS  "192.168.0.212"// eth0 bij Big Fix
 
 /*  END USER SETTABLE OPTIONS */
 

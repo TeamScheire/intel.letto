@@ -2,7 +2,10 @@
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 
-#include "myNTPClient.h"
+//#include "myNTPClient.h"
+
+//#define DEBUG_NTPClient
+#include <NTPClient.h>  //version 3.1.0
 #include <Time.h>
 #include <TimeLib.h>
 #include <Timezone.h>
@@ -28,12 +31,17 @@ IPAddress  mqtt_ip(mqtt_server_IP[0], mqtt_server_IP[1], mqtt_server_IP[2], mqtt
 bool obtainedwifi = false;
 
 // Define NTP properties
-#define NTP_OFFSET   60 * 60      // In seconds
+//#define NTP_OFFSET   60 * 60      // Summer Time ?
+#define NTP_OFFSET   60 * 0       // Winter Time ?
 #define NTP_INTERVAL 60 * 1000    // In miliseconds
 bool UK_DATE = false;
 
 // Set up the NTP UDP client
 WiFiUDP ntpUDP;
+
+//NTPClient timeClient(ntpUDP);
+
+//NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 3600, 60000);
 NTPClient timeClient(ntpUDP, NTP_ADDRESS, NTP_OFFSET, NTP_INTERVAL);
 //NTPClient timeClient2(ntpUDP, NTP_ADDRESS2, NTP_OFFSET, NTP_INTERVAL);
 
@@ -309,5 +317,3 @@ void determine_localtimenow() {
   Timezone euBrussel(euBRU, euUCT);
   localtimenow = euBrussel.toLocal(timenow);
 }
-
-
