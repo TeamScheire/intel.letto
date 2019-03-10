@@ -66,6 +66,21 @@ Some comments:
 
 4. Do **not** bridge the access point.
 
+### Test the wireless Access Point
+Now test all is working. Open your laptop and connect to the wifi of the Rasp Pi, so `intelletto`. 
+Connect the Rasp Pi to a ethernet cable to your router so it has access to the internet. Try to connect to the internet on your laptop when connected to the Rasp Pi via WiFi. If configured correctly, you should have access. 
+
+## Intel.Letto Modules
+Now the Rasp Pi is ready, set up the base modules to connect to it via WiFi.
+Test on the Rasp Pi who is connected with following code:
+
+    sudo hostapd_cli all_sta
+    
+See their IP4 address via:
+
+    arp -a -n
+
+
 ## Arduino Test Sketches
 
 1. [MPR121 Capacitive touch testcode](/alarmblanket/ArduinoTestSketches/MPR121_capacitive_touch_testcode/MPR121_capacitive_touch_testcode.ino): connect the MPR121 sensor to a NodeMCU for tracking and an OLED 128x32 for display of result
