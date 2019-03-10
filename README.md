@@ -79,11 +79,22 @@ Next, test if the MQTT server is running correctly. On the Rasp Pi open a termin
 
     mosquitto_sub -h localhost -t intellettoTest
 
-In another terminal window, publish a message: 
+In another terminal window, publish a message. You can do this with the hostname localhost, with the IP of eth0 (use command `ip a` in a terminal to see the eth0 ip and replace below `XXXXXX` with this IP), or with the static IP over wlan0 which we have set, so 192.168.4.1: 
 
-    mosquitto_pub -h localhost -t intellettoTest -m "Testing"
+    mosquitto_pub -h localhost -t intellettoTest -m "Testing1"
+    mosquitto_pub -h 192.168.4.1 -t intellettoTest -m "Testing2"
+    mosquitto_pub -h XXXXXX -t intellettoTest -m "Testing3"
     
-In the terminal window you did `mosquitto_sub` you should see this message arriving.
+In the terminal window you did `mosquitto_sub` you should see these messages arriving.
+
+Next, install on your laptop also mosquitto
+
+    sudo apt-get install mosquitto-clients
+
+Connect to the WiFi of the Rasp Pi, and test you can send MQTT messages via the wlan0 or eth0 IP of the Rasp Pi:
+
+    mosquitto_pub -h 192.168.4.1 -t intellettoTest -m "Testing2"
+    mosquitto_pub -h XXXXXX -t intellettoTest -m "Testing3"
 
 ## Intel.Letto Modules
 Now the Rasp Pi is ready, set up the base modules to connect to it via WiFi.
