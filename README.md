@@ -70,12 +70,23 @@ Some comments:
 Now test all is working. Open your laptop and connect to the wifi of the Rasp Pi, so `intelletto`. 
 Connect the Rasp Pi to a ethernet cable to your router so it has access to the internet. Try to connect to the internet on your laptop when connected to the Rasp Pi via WiFi. If configured correctly, you should have access. 
 
-## Intel.Letto Modules
-Now the Rasp Pi is ready, set up the base modules to connect to it via WiFi.
 Test on the Rasp Pi who is connected with following code to see their IP4 address via (you will also see your router connected via eth0):
 
     arp -a -n
+    
+### Test the MQTT Broker
+Next, test if the MQTT server is running correctly. On the Rasp Pi open a terminal, and subscribe to a MQTT channel. As we are on the Rasp Pi, we use address localhost
 
+    mosquitto_sub -h localhost -t intellettoTest
+
+In another terminal window, publish a message: 
+
+    mosquitto_pub -h localhost -t intellettoTest -m "Testing"
+    
+In the terminal window you did `mosquitto_sub` you should see this message arriving.
+
+## Intel.Letto Modules
+Now the Rasp Pi is ready, set up the base modules to connect to it via WiFi.
 
 ## Arduino Test Sketches
 
