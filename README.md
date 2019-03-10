@@ -65,6 +65,11 @@ Some comments:
        sudo systemctl start hostapd.service
 
 4. Do **not** bridge the access point.
+5. If after reboot the wifi network of the rasp pi is not starting, make it run automatically at startup with the commands
+
+       sudo update-rc.d hostapd defaults
+       sudo update-rc.d hostapd enable
+
 
 ### Test the wireless Access Point
 Now test all is working. Open your laptop and connect to the wifi of the Rasp Pi, so `intelletto`. 
