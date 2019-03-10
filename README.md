@@ -38,7 +38,43 @@ The **best** way is to use static DHCP. For this you need the MAC address of the
 
 **WHY?** Wondering why you need a static IP? We will use low cost devices in the modules that connect to this Rasp Pi. These will typically cache the IP address. So in case your server obtains a different IP address, it stops working. Workarounds to this require advanced skills, so we avoid it to not have this complication. As the IP is fixed, we will use this fixed IP also in the modules. Patches to do this better are welcome! If you can use static DHCP, you can replace this with the hostname, see eg a guide [here](https://unix.stackexchange.com/questions/16890/how-to-make-a-machine-accessible-from-the-lan-using-its-hostname).
 
-### Installing software on the Raspberry Pi
+### Installing MQTT software on the Raspberry Pi
+The Raspberry Pi will serve as MQTT broker for Intel.Letto. For this, install mosquitto. Open a terminal and do:
+
+    sudo apt-get install mosquitto
+    sudo apt-get install mosquitto-clients
+
+### Rasp Pi as WiFi access point for Intel.Letto
+Next we set up the rasp as a standalone network to which we can connect. For this
+Follow steps on [Rasp pi wireless AP doc](https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md) 
+So, install with: 
+
+    sudo apt-get install dnsmasq hostapd
+
+We will assign the server the IP address `192.168.4.1`, so follow that guide to set static IP, and configure the DHCP server
+Next we set up how to log into the Access Point (AP) we make with the Pi, For this, make a hotapd.conf file:
+
+    sudo nano /etc/hostapd/hostapd.conf
+
+It should contain:
+
+    interface=wlan0
+    driver=nl80211
+    ssid=intelletto
+    hw_mode=g
+    channel=7
+    wmm_enabled=0
+    macaddr_acl=0
+    auth_algs=1
+    ignore_broadcast_ssid=0
+    wpa=2
+    wpa_passphrase=XXXXXXX
+    wpa_key_mgmt=WPA-PSK
+    wpa_pairwise=TKIP
+    rsn_pairwise=CCMP
+    ctrl_interface=/var/run/hostapd
+    ctrl_interface_group=0
+
 
 ## Arduino Test Sketches
 
