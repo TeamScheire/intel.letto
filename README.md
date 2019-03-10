@@ -72,11 +72,7 @@ Connect the Rasp Pi to a ethernet cable to your router so it has access to the i
 
 ## Intel.Letto Modules
 Now the Rasp Pi is ready, set up the base modules to connect to it via WiFi.
-Test on the Rasp Pi who is connected with following code:
-
-    sudo hostapd_cli all_sta
-    
-See their IP4 address via:
+Test on the Rasp Pi who is connected with following code to see their IP4 address via (you will also see your router connected via eth0):
 
     arp -a -n
 
