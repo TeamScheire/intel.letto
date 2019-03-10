@@ -46,35 +46,25 @@ The Raspberry Pi will serve as MQTT broker for Intel.Letto. For this, install mo
 
 ### Rasp Pi as WiFi access point for Intel.Letto
 Next we set up the rasp as a standalone network to which we can connect. For this
-Follow steps on [Rasp pi wireless AP doc](https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md) 
-So, install with: 
+follow steps on [Rasp pi wireless AP doc](https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md) 
+up to the section **Add routing and masquerde**.
 
-    sudo apt-get install dnsmasq hostapd
+Some comments:
 
-We will assign the server the IP address `192.168.4.1`, so follow that guide to set static IP, and configure the DHCP server
-Next we set up how to log into the Access Point (AP) we make with the Pi, For this, make a hotapd.conf file:
+1. We will assign the server the IP address `192.168.4.1`, so follow that guide to set that, and configure the DHCP server
+2. We set up how to log into the Access Point (AP) we make with the Rasp Pi, for this, you make a `hostapd.conf` file with the ssid and password for your AP:
 
-    sudo nano /etc/hostapd/hostapd.conf
-
-It should contain:
-
-    interface=wlan0
-    driver=nl80211
     ssid=intelletto
-    hw_mode=g
-    channel=7
-    wmm_enabled=0
-    macaddr_acl=0
-    auth_algs=1
-    ignore_broadcast_ssid=0
-    wpa=2
     wpa_passphrase=XXXXXXX
-    wpa_key_mgmt=WPA-PSK
-    wpa_pairwise=TKIP
-    rsn_pairwise=CCMP
-    ctrl_interface=/var/run/hostapd
-    ctrl_interface_group=0
 
+:In the above we chose `intelletto` as ssid of the wireless connection. Change `XXXXXXX` in a good password!
+
+3. In the section **Start it up** you need to do `sudo systemctl start hostapd`. If this gives an error: *Unit hostapd.service is masked* you need to first unmask the service:
+
+    sudo systemctl unmask hostapd.service
+    sudo systemctl start hostapd.service
+
+4. Do **not** bridge the access point.
 
 ## Arduino Test Sketches
 
