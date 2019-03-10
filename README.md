@@ -54,15 +54,15 @@ Some comments:
 1. We will assign the server the IP address `192.168.4.1`, so follow that guide to set that, and configure the DHCP server
 2. We set up how to log into the Access Point (AP) we make with the Rasp Pi, for this, you make a `hostapd.conf` file with the ssid and password for your AP:
 
-    ssid=intelletto
-    wpa_passphrase=XXXXXXX
+        ssid=intelletto
+        wpa_passphrase=XXXXXXX
 
 :In the above we chose `intelletto` as ssid of the wireless connection. Change `XXXXXXX` in a good password!
 
 3. In the section **Start it up** you need to do `sudo systemctl start hostapd`. If this gives an error: *Unit hostapd.service is masked* you need to first unmask the service:
 
-    sudo systemctl unmask hostapd.service
-    sudo systemctl start hostapd.service
+       sudo systemctl unmask hostapd.service
+       sudo systemctl start hostapd.service
 
 4. Do **not** bridge the access point.
 
@@ -95,6 +95,18 @@ Connect to the WiFi of the Rasp Pi, and test you can send MQTT messages via the 
 
     mosquitto_pub -h 192.168.4.1 -t intellettoTest -m "Testing2"
     mosquitto_pub -h XXXXXX -t intellettoTest -m "Testing3"
+
+### Setup NTP server to serve time
+
+The installation of the NTP server on the Rasp Pi is easy as one command execution:
+
+    sudo apt install ntp
+
+After installation, confirm that your NTP server is up and running:
+
+    systemctl status ntp
+
+The NTP sever comes pre-configured out of the box. The configuration of your NTP server can be managed via `/etc/ntp.conf` configuration file. The default NTP server configuration relies on `debian.pool.ntp.org` server group. This should be ok.
 
 ## Intel.Letto Modules
 Now the Rasp Pi is ready, set up the base modules to connect to it via WiFi.
