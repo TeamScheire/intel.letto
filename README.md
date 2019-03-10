@@ -113,6 +113,22 @@ After installation, confirm that your NTP server is up and running:
 
 The NTP sever comes pre-configured out of the box. The configuration of your NTP server can be managed via `/etc/ntp.conf` configuration file. The default NTP server configuration relies on `debian.pool.ntp.org` server group. This should be ok.
 
+### Static eth0 ip 
+
+Although doing MQTT messages to the wlan0 IP, 192.168.4.1, this unfortnutaly does not work when using Arduino/NodeMCU. I assume the ip forwarding causes issues and some special `iptables` commands would be necessary. Connection does work with the eth0 IP of the Raspberry Pi, so you will need to use that in the Intel.Letto Modules. 
+
+For this reason, it is important to give your Rasp Pi a static IP via your router settings. With routers of companies, this can be tricky as the settings are often hidden. Some examples
+
+* Belgium
+  * [Telenet static ip](https://www2.telenet.be/nl/business/klantenservice/hoe-stel-ik-een-vast-ip-adres-in/)
+  
+Should the ip address of the Rasp Pi change, then this must be updated on the base modules. You need to change the old IP in the new one in:
+
+* in intelletto.ino on 3 places
+* in wake_loudspeaker.ino on 2 places
+* in inbed_detector.ino on 2 places
+* in massage_control_mqtt_MASTER_NODEMCU.ino on 2 places. Careful, this one can only be flashed if the nodeMCU is not connected to the Arduino, you need to open the box, disconnect the Arduino, flash the nodeMCU, and reconnect the Arduino.
+
 ## Intel.Letto Modules
 Now the Rasp Pi is ready, set up the base modules to connect to it via WiFi.
 
