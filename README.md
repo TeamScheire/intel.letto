@@ -57,12 +57,16 @@ Some comments:
         ssid=intelletto
         wpa_passphrase=XXXXXXX
 
-:In the above we chose `intelletto` as ssid of the wireless connection. Change `XXXXXXX` in a good password!
+   In the above we chose `intelletto` as ssid of the wireless connection. Change `XXXXXXX` in a good password!
 
 3. In the section **Start it up** you need to do `sudo systemctl start hostapd`. If this gives an error: *Unit hostapd.service is masked* you need to first unmask the service:
 
        sudo systemctl unmask hostapd.service
        sudo systemctl start hostapd.service
+
+   To see the status of this service, you can do
+   
+        sudo systemctl status hostapd
 
 4. Do **not** bridge the access point.
 5. If after reboot the wifi network of the rasp pi is not starting, make it run automatically at startup with the commands
