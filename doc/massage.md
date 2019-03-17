@@ -50,3 +50,56 @@ a digital pin of the Arduino for the  mid power setting of the massage. We use p
 
 Take a power brick of 12V, 1.2A to power the Arduino. The massage mattress has such a power brick you can use. 
 The 12V input is also used to power the massage mattress. Connect the Vin (12V) to the black wire of the mattress. 
+
+The NodeMCU is powered with the GND and 5V pins of the Arduino UNO. On the NodeMCU, I2C pins are `int pSDA = D2;` and
+`int pSCL = D3;`
+
+These connect to their counterparts on the Arduino: A4 (SDA), A5 (SCL).
+
+The resulting module:
+
+!(massage module)[massage01.png]
+
+# MQTT
+## Important Remark
+
+The NodeMCU must be programmed still with the WiFi credentials. However, this can **ONLY** hammen when the NodeMCU is **NOT** connected to the Arduino. So open the module, remove the NodeMCU from the header it is attached to, flash the device with changes needed, then put back in the header.
+
+The Arduino is fully configured and does not need changes in the programming.
+
+## Configuration
+The NodeMCU connects via MQTT to the Rasp Pi. In the code, set the correct WiFi credentials and give the IP of the MQTT server:
+
+    // write here your wifi credentials 
+    const char* password = "********"; // and password
+    const char* ssid = "intelletto";   // insert your own ssid 
+
+    //mqtt server/broker 
+    const char* mqtt_server = "192.168.0.212";  //eth0 address of the raspberry pi
+    uint8_t mqtt_server_IP[4] = {192, 168, 0, 212};
+
+Then use the Arduino IDE to flash the NodeMCU (see remark above: disconnect the NodeMCU first to do this!).
+
+
+## Messages
+This module sends and reacts to the following MQTT messages:
+
+1. **intellettoMassage**
+The massage controller subscribes to this topic and reacts with operating the  massage motors. Publish on it to have the motors working. Following payloads are possible:
+
+.* O: all off
+.* code (All, Neck, Breast, Tummy, Hip) + number 0 off, 1 mid, 2 strong in following wayy:
+..* Nx; with x number: 0: Neck off; 1: mid power; 2: strong power
+..* Bx; with x number: 0: Breast off; 1: mid power; 2: strong power
+..* Tx; with x number: 0: Tummy off; 1: mid power; 2: strong power
+..* Hx; with x number: 0: Hip off; 1: mid power; 2: strong power
+..* Ax; with x number: 0: Hip off; 1: mid power; 2: strong power
+.* P1: start programm 1, which is a preset program
+
+
+# Resources
+
+* [The Arduino Code master NodeMCU](../alarmblanket/intelletto_massage/massage_control_mqtt_MASTER_NODEMCU/)
+* [The Arduino Code slave Arduino UNO](../alarmblanket/intelletto_massage/massage_control_mqtt_SLAVE_ARD/)
+
+
