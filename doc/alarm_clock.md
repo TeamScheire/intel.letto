@@ -4,6 +4,26 @@
 the base station which shows the clock and allows to program the alarm. 
 It also contains a buzzer and a LED strip can be connected to it.
 
+## Clock manual & How to Set Alarm
+
+There is only one button on the alarm clock. The clock has two states: **Clock State** and **Alarm State**. 
+
+In **Clock state**, you can intereact with the alarm and set the alarm time. You use it as follows:
+
+**Long Press** to switch between the three modes:
+
+1. *Normal mode*, show clock. In this mode you see the time on the clock
+2. *Alarm program mode*. In this mode you see the set alarm time, and you can change it
+3. *No Display mode*. In this mode the display is off. Use it if the display keeps you awake
+
+**Short Press** to program the alarm when in *Alarm program mode*
+
+In *Alarm program mode*, do short press to change the alarm hour. When you reached the correct alarm hour, use long press to store it and move to the setting of the alarm minute. Use short press to change the minutes, and use long press to finish setting the alarm. After changing the alarm, the clock is again in *Normal mode*.  
+
+In **Alarm State** the alarm is going off, and you can only do limited intereaction with the clock. If the buzzer goes, you can do a button press, to switch it off for some time.
+
+To exit the **Alarm State**, you must go out of the bed, watch the screen on the clock for it to indicate it detects you are out of bed (left bottom indicator *Uit Bed*). Then you can do a long press to exit the **Alarm State**.
+
 ## Hardware
 
 The Alarm Clock is based on a nodeMCU connected to an OLED screen. We also connect a YL44 buzzer, and a LED strip. Finally, a push button is added allowing to program the Alarm Clock
