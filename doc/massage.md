@@ -21,7 +21,7 @@ Opening the cable to the mattress, and using the multimeter to measure things, w
 * Yellow: Hip portaion, voltage: off 12V, low 4V, mid 2V, high 0V
 * Green: Temperature part for heating, off 12V, on 0.2V
 
-Chip controller is a Sonix SN8P2602CPB 137AN Z01: (datasheet)[http://www.alldatasheet.com/view.jsp?Searchword=SN8P2602CPB]
+Chip controller is a Sonix SN8P2602CPB 137AN Z01: [datasheet](http://www.alldatasheet.com/view.jsp?Searchword=SN8P2602CPB)
 
 De massage motors connect via a diode to 12V and condensator 104 to 12V to a transistor SS8050 D 331. 
 This is an NPN  transistor. The emitter is on 0V. The Collector goes to the mattress (secured with a diode and a condensator 104).
@@ -58,7 +58,7 @@ These connect to their counterparts on the Arduino: A4 (SDA), A5 (SCL).
 
 The resulting module:
 
-!(massage module)[massage01.png]
+![massage module](massage01.png)
 
 # MQTT
 ## Important Remark
@@ -87,14 +87,14 @@ This module sends and reacts to the following MQTT messages:
 1. **intellettoMassage**
 The massage controller subscribes to this topic and reacts with operating the  massage motors. Publish on it to have the motors working. Following payloads are possible:
 
-.* O: all off
-.* code (All, Neck, Breast, Tummy, Hip) + number 0 off, 1 mid, 2 strong in following wayy:
-..* Nx; with x number: 0: Neck off; 1: mid power; 2: strong power
-..* Bx; with x number: 0: Breast off; 1: mid power; 2: strong power
-..* Tx; with x number: 0: Tummy off; 1: mid power; 2: strong power
-..* Hx; with x number: 0: Hip off; 1: mid power; 2: strong power
-..* Ax; with x number: 0: Hip off; 1: mid power; 2: strong power
-.* P1: start programm 1, which is a preset program
+  * O: all off
+  * code (All, Neck, Breast, Tummy, Hip) + number 0 off, 1 mid, 2 strong in following way:
+    * Nx; with x number: 0: Neck off; 1: mid power; 2: strong power
+    * Bx; with x number: 0: Breast off; 1: mid power; 2: strong power
+    * Tx; with x number: 0: Tummy off; 1: mid power; 2: strong power
+    * Hx; with x number: 0: Hip off; 1: mid power; 2: strong power
+    * Ax; with x number: 0: Hip off; 1: mid power; 2: strong power
+  * P1: start programm 1, which is a preset program
 
 
 # Resources
