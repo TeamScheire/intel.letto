@@ -36,14 +36,15 @@ const char* password = "********"; // and password
 const char* ssid = "intelletto";   // insert your own ssid 
 
 //mqtt server/broker 
-const char* mqtt_server = "192.168.1.28";  //eth0 address of the raspberry pi - Ingegno
-uint8_t mqtt_server_IP[4] = {192, 168, 1, 28};
+//const char* mqtt_server = "raspberrypi.local";  //eth0 address of the raspberry pi - Ingegno
+const char* mqtt_server = "192.168.1.34";  //eth0 address of the raspberry pi - Ingegno
+uint8_t mqtt_server_IP[4] = {192, 168, 1, 34};
 //const char* mqtt_server = "192.168.0.212";  //eth0 address of the raspberry pi - Big Fix
 //uint8_t mqtt_server_IP[4] = {192, 168, 0, 212};
 
 //NTP settings
-//#define NTP_ADDRESS  "raspberrypi.local"  // change this to whatever pool is closest (see ntp.org)
-#define NTP_ADDRESS  "192.168.1.28"   // eth0 address of the raspberry pi Ingegno Maker Space
+//#define NTP_ADDRESS  "intelletto.local"  // change this to whatever pool is closest (see ntp.org)
+#define NTP_ADDRESS  "192.168.1.34"   // eth0 address of the raspberry pi Ingegno Maker Space
 //#define NTP_ADDRESS  "192.168.0.212"// eth0 bij Big Fix
 
 /*  END USER SETTABLE OPTIONS */
@@ -178,10 +179,24 @@ void setup() {
   // show no color
   myNeo_PixelStrook.ColorSet(myNeo_PixelStrook.Color(0, 0, 0));
   myNeo_PixelStrook.show();
-
+    
   while (WiFi.status() != WL_CONNECTED) {
+    if (SERIALTESTOUTPUT) {
+      Serial.println("");
+      Serial.println("Setting up WiFi connection ");
+    }
    setupWiFi(true); // Connect to local Wifi
   }
+
+  // obtain IP of our server  
+  /*WiFi.hostByName(NTP_ADDRESS, timeServerIP);
+  if (SERIALTESTOUTPUT) {
+    Serial.println();
+    Serial.print("IP address for ");
+    Serial.print(NTP_ADDRESS);
+    Serial.print(" is ");
+    Serial.println(timeServerIP);
+  }*/
   
   //set randomseed
   randomSeed(micros());
@@ -189,6 +204,12 @@ void setup() {
   //initialize variables
   newmassagestate = "O";
   // connect to NTP 
+  /*
+  String timeServerstring = timeServerIP.toString();
+  char __timeServerstring[sizeof(timeServerstring)];
+  timeServerstring.toCharArray(__timeServerstring, sizeof(__timeServerstring));
+  timeClient.setPoolServerName(__timeServerstring);
+  */
   timeClient.begin();   // Start the NTP UDP client
   // mqtt client start
   setupMQTTClient();

@@ -31,7 +31,8 @@
 const char* ssid = "*******";
 const char* password = "*******";
 //const char* mqtt_server = "broker.mqtt-dashboard.com";
-const char* mqtt_server = "192.168.0.111";
+//const char* mqtt_server = "192.168.0.111";
+const char* mqtt_server = "192.168.0.212";
 
 WiFiClient espClient;
 PubSubClient client(espClient);

@@ -79,7 +79,7 @@ void setupWiFi(bool wait)
     WiFi.disconnect();
     if (use_static_IP) {
       // we force a static IP for this station and set 
-      IPAddress  stationIP(static_IP[0], static_IP[1], static_IP[2], static_IP[3]);
+      IPAddress stationIP(static_IP[0], static_IP[1], static_IP[2], static_IP[3]);
       IPAddress gateway(static_gateway_IP[0], static_gateway_IP[1], static_gateway_IP[2], static_gateway_IP[3]); // set gateway to match your network
       IPAddress subnet(255, 255, 255, 0); // set subnet mask to match yourelse
       WiFi.mode(WIFI_STA);
@@ -112,6 +112,20 @@ void setupWiFi(bool wait)
         return;
       }
     }
+    /*
+    WiFi.hostByName(NTP_ADDRESS, timeServerIP);
+    String timeServerstring = timeServerIP.toString();
+    char __timeServerstring[sizeof(timeServerstring)];
+    timeServerstring.toCharArray(__timeServerstring, sizeof(__timeServerstring));
+    timeClient.setPoolServerName(__timeServerstring);
+    if (SERIALTESTOUTPUT) {
+      Serial.println();
+      Serial.print("IP address for ");
+      Serial.print(NTP_ADDRESS);
+      Serial.print(" is ");
+      Serial.println(timeServerIP);
+    }
+    */
     
     if (SERIALTESTOUTPUT) {
       Serial.println("");
