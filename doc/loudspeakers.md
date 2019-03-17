@@ -49,10 +49,12 @@ zip  (SFEMP3Shield.zip) and install it
 ## Messages
 This module sends and reacts to the following MQTT messages:
 
-1. **intellettoLoudSp**
-The stations reacts to messages on this channel. Messages are required to be of the form:
+**intellettoLoudSp**
 
-    S
+The stations reacts to messages on this channel. Messages are required to be of the form:
+ 
+ 
+    S 
 
 This will stop playback. To play a track, the message must be:
 
