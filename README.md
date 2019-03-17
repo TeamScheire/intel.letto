@@ -140,7 +140,7 @@ Now the Rasp Pi is ready, set up the base modules to connect to it via WiFi.
 * [In Bed Detection](doc/inbed_detection.md): carbon fiber is used to create bands in a blanket. These connect to a touch module that detects if a person is in the bed.
 * [Massage bed](doc/massage.md): part of the wake up sequence is a massage bed placed under the *In Bed Detection*-module. 
 * [Wake Sound system](doc/loudspeakers.md): this module generates textual sounds to help you wake up.
-* Sonoff plugs: these plugs are connected to a strong light, and an always on ventilator. They switch on or off these to help in the wake up cycle.
+* [Sonoff plugs](doc/sonoff_plugs.md): these plugs are connected to a strong light, and an always on ventilator. They switch on or off these to help in the wake up cycle.
 
 ## Arduino Test Sketches
 
