@@ -15,6 +15,10 @@ Intel.Letto works by working on all stimuli:
 All the above is done to gradually make the sleeper aware of the fact they need to get up. On the alarm time, the cycle becomes stronger. In a rough drawing:
 ![wake up sequence](doc/intelletto_sequentie.png)
 
+# Clock Manual
+
+You have the Intel.letto, and just want to read the manual on how to operate the clock? See the [alarm clock module manual](doc/alarm_clock.md) then!
+
 # Hardware
 The hardware consists of a base station which is a Raspberry Pi. This connects via a LAN port to your router, and as such to the internet. 
 Then several modules are present, which connect to the Raspberry Pi over a WiFi network broadcast by the Raspberry Pi. 
