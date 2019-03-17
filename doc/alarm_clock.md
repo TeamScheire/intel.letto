@@ -4,6 +4,59 @@
 the base station which shows the clock and allows to program the alarm. 
 It also contains a buzzer and a LED strip can be connected to it.
 
+## Hardware
+
+The Alarm Clock is based on a nodeMCU connected to an OLED screen. We also connect a YL44 buzzer, and a LED strip. Finally, a push button is added allowing to program the Alarm Clock
+
+### Pushbutton
+
+We connect the pushbutton to D7, other side of the button to GND.
+
+## LED strip
+
+Controll of the neopixels is done via pin D3
+
+## OLED 128x32 Display
+
+The display is connected over I2C. We use pin D2 = SDA and pin D1 =SCL
+
+Initialization of the U8g2 depends on the OLED you bought. You might need to change this for another OLED. In our case it is
+
+    // Create a display object
+    U8G2_SSD1306_128X32_UNIVISION_F_SW_I2C u8g2(U8G2_R0, pSCL, pSDA, U8X8_PIN_NONE);
+
+### Buzzer YL-44 
+
+This is an active buzzer, it produces sound by itself without
+external frequency generator. Sound is in the audible 2 kHz range
+
+Taking the I/O pin LOW will turn the buzzer ON and taking this
+pin HIGH will turn the buzzer OFF (as will leaving this pin OPEN). 
+This device can be controlled by PWM.
+
+**Problem**: The buzzer is connected to NodeMCU pin D6. This pin has 3V3 login, so the I/O pin
+of the buzzer would always be LOW with buzzer on as only with 5V buzzer is off
+
+**Solution**: we add a BC547 NPN transistor on the GND pin of the YL-44. This
+allows to connect the I/O pin of the YL-44 to the GND out of the
+NodeMCU, and the VCC to the 5V pin. The D6 pin is connected to the 
+Base of the BC547, the GND of the YL-44 is connected to the Emittor
+(right) of the BC547, and the Collector is connected to the GND of 
+NodeMCU.
+
+It is possible to achieve softer sounds using PWM on the D6 pin
+
+## Software
+
+Libraries needed:
+1. Time.h & TimeLib.h:  https://github.com/PaulStoffregen/Time
+2. Timezone.h: (via install library) https://github.com/JChristensen/Timezone
+3. NTPClient.h: (via install library .. replaced by own library for now) https://github.com/arduino-libraries/NTPClient
+4. ESP8266WiFi.h & WifiUDP.h: (via adding esp on board manager) https://github.com/ekstrand/ESP8266wifi
+5. U8g2: for OLED display via install library
+6. Adafruit neopixel library: via install library
+7. PubSubClient library: via install library - This is to controll devices via MQTT
+
 
 ## Messages
 This module sends and reacts to the following MQTT messages:
