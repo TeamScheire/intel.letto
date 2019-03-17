@@ -136,6 +136,7 @@ Should the ip address of the Rasp Pi change, then this must be updated on the ba
 ## Intel.Letto Modules
 Now the Rasp Pi is ready, set up the base modules to connect to it via WiFi.
 
+* [Alarm Clock Base station](doc/alarm_clock.md): the base station which shows the clock and allows to program the alarm. It also contains a buzzer and a LED strip can be connected to it.
 * [In Bed Detection](doc/inbed_detection.md): carbon fiber is used to create bands in a blanket. These connect to a touch module that detects if a person is in the bed.
 * [Massage bed](doc/massage.md): part of the wake up sequence is a massage bed placed under the *In Bed Detection*-module. 
 * Wake Sound system: this module generates textual sounds to help you wake up.
