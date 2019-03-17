@@ -117,7 +117,7 @@ See if messages arrive. Next, send some messages also to switch off and on the N
 
 If this works, mqtt is possible over the local network.
 
-##NodeMCU controlling Sonoff via MQTT
+## NodeMCU controlling Sonoff via MQTT
 With the protocol working, we can switch sonoff plugs on and off. The plugs must point to the same mqtt server.
 
 ## Using the Raspberry Pi as broker
