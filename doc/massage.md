@@ -102,4 +102,17 @@ The massage controller subscribes to this topic and reacts with operating the  m
 * [The Arduino Code master NodeMCU](../alarmblanket/intelletto_massage/massage_control_mqtt_MASTER_NODEMCU/)
 * [The Arduino Code slave Arduino UNO](../alarmblanket/intelletto_massage/massage_control_mqtt_SLAVE_ARD/)
 
+# Testing
+On laptop PC connected in same subnet, you can test the massage mattress. 
 
+In one Terminal window, subscribe the channel. Replace localhost with the server running MQTT !
+
+    mosquitto_sub -h localhost -t intellettoMassage 
+
+In another Terminal window send messages. Replace localhost with the server running MQTT !
+
+    mosquitto_pub -h localhost -t intellettoMassage -m "N0"
+
+or
+
+    mosquitto_pub -h localhost -t intellettoMassage -m "N0"
