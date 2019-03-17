@@ -19,9 +19,18 @@ The ends of the carbon fiber is attached to  normal coper wire, which we connect
 
 An OLED screen is attached to the module, indicating on which of the 6 zones a person is detected.
 
-# IMPORTANT REMARK
+# MPR121
+
+## IMPORTANT REMARK
 
 It is important to note that the MPR121 does a calibration at start up. It is therefore required that **no person is in the bed when the system is switched on**!
+
+To read up on how to change the sensitivity, see [adafruit forum](https://forums.adafruit.com/viewtopic.php?f=19&t=72025).
+
+## Install Library
+To work with the code, the MPR121 adafruit library must be installed in the Arduino IDE.
+
+![bed sheet](inbed_detection04.png)
 
 # MQTT
 ## Configuration
