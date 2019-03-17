@@ -12,11 +12,11 @@ The Alarm Clock is based on a nodeMCU connected to an OLED screen. We also conne
 
 We connect the pushbutton to D7, other side of the button to GND.
 
-## LED strip
+### LED strip
 
 Controll of the neopixels is done via pin D3
 
-## OLED 128x32 Display
+### OLED 128x32 Display
 
 The display is connected over I2C. We use pin D2 = SDA and pin D1 =SCL
 
@@ -46,6 +46,16 @@ NodeMCU.
 
 It is possible to achieve softer sounds using PWM on the D6 pin
 
+### Case
+Internal part of case:
+
+![case internal](alarm01.png)
+
+External part:
+
+![case external](alarm02.png)
+
+See references below for link to svg file.
 ## Software
 
 Libraries needed:
