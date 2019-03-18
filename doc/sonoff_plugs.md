@@ -6,6 +6,8 @@ Two components are important:
 * daylight light box, used to help in light therapy
 * ventilator aimed at the sleeping person
 
+All modules of [Intel.Letto](https://github.com/TeamScheire/intel.letto): [module overview](https://github.com/TeamScheire/intel.letto#intelletto-modules).
+
 ## Hacking the Sonoff: Flashing
 To use the Sonoff, we flash it with another program, called **Tasmota**, which allows us 
 to use MQTT. 
