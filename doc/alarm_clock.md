@@ -1,8 +1,10 @@
 # Alarm Clock Base Station
 
 ## Introduction
-the base station which shows the clock and allows to program the alarm. 
+The base station which shows the clock and allows to program the alarm. 
 It also contains a buzzer and a LED strip can be connected to it.
+
+All modules of [Intel.Letto](https://github.com/TeamScheire/intel.letto): [module overview](https://github.com/TeamScheire/intel.letto#intelletto-modules).
 
 ## Clock manual & How to Set Alarm
 
