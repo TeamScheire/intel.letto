@@ -2,6 +2,10 @@
 
 For the inbed detection, we use touch module [MPR121](https://learn.sparkfun.com/tutorials/mpr121-hookup-guide).
 
+All modules of [Intel.Letto](https://github.com/TeamScheire/intel.letto): [module overview](https://github.com/TeamScheire/intel.letto#intelletto-modules).
+
+## Hardware 
+
 We take a bed sheet that can be stretched over the bed, and sew conductive carbon fiber yarn to it. Next we take a second bed sheet, and sew it on top if. Like this the carbon fiber is well protected, and washable. 
 We do this in 6 horizontal parts where the person who operates the alarm clock sleeps. 
 
@@ -19,21 +23,22 @@ The ends of the carbon fiber is attached to  normal coper wire, which we connect
 
 An OLED screen is attached to the module, indicating on which of the 6 zones a person is detected.
 
-# MPR121
+## MPR121
 
-## IMPORTANT REMARK
+**IMPORTANT REMARK**
 
 It is important to note that the MPR121 does a calibration at start up. It is therefore required that **no person is in the bed when the system is switched on**!
 
 To read up on how to change the sensitivity, see [adafruit forum](https://forums.adafruit.com/viewtopic.php?f=19&t=72025).
 
-## Install Library
+## Software
+### Install Library
 To work with the code, the MPR121 adafruit library must be installed in the Arduino IDE.
 
 ![bed sheet](inbed_detection04.png)
 
-# MQTT
-## Configuration
+### MQTT
+#### Configuration
 The system connects via MQTT to the Rasp Pi. In the code, set the correct WiFi credentials and give the IP of the MQTT server:
 
     // write here your wifi credentials 
@@ -46,7 +51,7 @@ The system connects via MQTT to the Rasp Pi. In the code, set the correct WiFi c
 
 Then use the Arduino IDE to flash the NodeMCU.
 
-## Messages
+#### Messages
 This module sends and reacts to the following MQTT messages:
 
 1. **intellettoBedSensorInBed**
