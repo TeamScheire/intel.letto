@@ -5,6 +5,8 @@ For the massage module we hack a commercial massage mattress. We do it in such a
 Next we need to be able to controll what the mattress does over WiFi. For this, we make the Arduino UNO a slave of a master
 NodeMCU device, which collects MQTT messages, and sends them over I2C to the Arduino UNO that controls the mattress then.
 
+All modules of [Intel.Letto](https://github.com/TeamScheire/intel.letto): [module overview](https://github.com/TeamScheire/intel.letto#intelletto-modules).
+
 ## Massage Mattress
 
 We hack the [Colchón masaje jocca 6163+ Regalo Báscula](https://www.latiendaencasa.es/cuida-tu-salud/A20598994-colchon-masaje-jocca-6163--regalo-bascula/)
