@@ -2,6 +2,8 @@
 
 This module generates textual sounds to help you wake up.
 
+All modules of [Intel.Letto](https://github.com/TeamScheire/intel.letto): [module overview](https://github.com/TeamScheire/intel.letto#intelletto-modules).
+
 ## Hardware
 
 This module is based on a NodeMCU which uses a VS1053 board (from Geeetech) to play sound fragments. 
