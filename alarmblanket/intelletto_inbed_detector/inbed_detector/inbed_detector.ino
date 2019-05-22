@@ -17,6 +17,7 @@ Variables:
 */
 
 const bool SERIALTESTOUTPUT = true;
+const bool WAITFORNETWORK = true;
 #define SERIALSPEED 115200
 const bool SHOWonU8g2 = true;
 const int connectedelectrodes = 6; // how many touch electrodes present?
@@ -97,8 +98,15 @@ void setup(void) {
     initial_display();
   }
   
-  while (WiFi.status() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED && WAITFORNETWORK) {
    setupWiFi(true); // Connect to local Wifi
+  }
+  if (! WAITFORNETWORK) {  
+    if ( WiFi.status() != WL_CONNECTED) {
+        obtainedwifi = false;
+        delay(1);
+        setupWiFi(false);
+    } else obtainedwifi = true;
   }
   //set randomseed
   randomSeed(micros());
@@ -470,4 +478,3 @@ void write_wifi(bool wifi){
     u8g2.drawStr(100,32,"No Wifi");
   }
 }
-
